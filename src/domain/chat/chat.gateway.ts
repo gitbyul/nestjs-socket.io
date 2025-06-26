@@ -8,6 +8,8 @@ import {
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 
+import { LogUtil } from 'src/config/log/log.util';
+
 import { AuthService } from 'src/domain/auth/auth.service';
 import { ChatService } from './servcie/chat.service';
 
@@ -16,29 +18,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly authService: AuthService,
     private readonly chatService: ChatService,
+    private readonly logUtil: LogUtil,
   ) {}
-  handleConnection(client: Socket, ...args: any[]) {
-    throw new Error('Method not implemented.');
+  async handleConnection(socket: Socket) {
+    try {
+      // 인증 토큰 검증
+      const user = await this.authService.authenticateSocket(socket);
+      // 유저 연결 초기화
+      await this.chatService.initializeUserConnection(user, socket);
+    } catch (error) {
+      // 연결 실패 시 유저 연결 해제
+      await this.chatService.disconnectUser(socket);
+      throw error;
+    }
   }
 
-  handleDisconnect(client: Socket) {
-    throw new Error('Method not implemented.');
-  }
-
-  @SubscribeMessage('receiveMessage')
-  receiveMessage(
-    @MessageBody() payload: { message: string },
-    // @ConnectedSocket() socket: Socket,
-  ) {
-    console.log('receiveMessage : ', payload);
-  }
-
-  @SubscribeMessage('sendMessage')
-  sendMessage(
-    @MessageBody() payload: { message: string },
-    @ConnectedSocket() socket: Socket,
-  ) {
-    console.log('sendMessage : ', payload);
-    socket.emit('sendMessage', payload);
+  async handleDisconnect(socket: Socket) {
+    // 유저 연결 해제
+    await this.chatService.disconnectUser(socket);
   }
 }

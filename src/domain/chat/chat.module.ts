@@ -14,6 +14,9 @@ import { ChatRooms } from './entity/ChatRooms.entity';
 import { ChatMessages } from './entity/ChatMessages.entity';
 import { ChatRoomMembers } from './entity/ChatRoomMembers.entity';
 import { ChatTemplates } from './entity/ChatTemplates.entity';
+import { ChatConnectedUsers } from './entity/ChatConnectedUsers.entity';
+import { ChatConnectionService } from './servcie/chat-connection.service';
+import { LogModule } from 'src/config/log/log.module';
 
 @Module({
   imports: [
@@ -23,7 +26,9 @@ import { ChatTemplates } from './entity/ChatTemplates.entity';
       ChatMessages,
       ChatRoomMembers,
       ChatTemplates,
+      ChatConnectedUsers,
     ]),
+    LogModule,
   ],
   providers: [
     ChatGateway,
@@ -32,6 +37,7 @@ import { ChatTemplates } from './entity/ChatTemplates.entity';
     ChatRoomMemberService,
     ChatMessageService,
     ChatTemplateService,
+    ChatConnectionService,
   ],
 })
 export class ChatModule {}
