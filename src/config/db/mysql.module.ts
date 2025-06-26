@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ChatConnectedUsers } from 'src/domain/chat/entity/ChatConnectedUsers.entity';
 import { ChatMessages } from 'src/domain/chat/entity/ChatMessages.entity';
 import { ChatRoomMembers } from 'src/domain/chat/entity/ChatRoomMembers.entity';
 import { ChatRooms } from 'src/domain/chat/entity/ChatRooms.entity';
@@ -21,7 +22,13 @@ import { ChatTemplates } from 'src/domain/chat/entity/ChatTemplates.entity';
         database: configService.get<string>('DB_DATABASE'),
         synchronize: false,
         logging: ['query', 'error', 'schema', 'warn', 'info', 'log'],
-        entities: [ChatRooms, ChatMessages, ChatRoomMembers, ChatTemplates],
+        entities: [
+          ChatRooms,
+          ChatMessages,
+          ChatRoomMembers,
+          ChatTemplates,
+          ChatConnectedUsers,
+        ],
       }),
     }),
   ],
