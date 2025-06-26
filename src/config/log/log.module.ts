@@ -5,7 +5,7 @@ import { WinstonModule } from 'nest-winston';
 import * as path from 'path';
 import * as winston from 'winston';
 import * as winstonDailyRotateFile from 'winston-daily-rotate-file';
-import { LogInterceptor } from './log.interceptor';
+import { LogHttpInterceptor } from './log-http.interceptor';
 import { LogUtil } from './log.util';
 
 @Module({
@@ -29,7 +29,7 @@ import { LogUtil } from './log.util';
           ),
           datePattern: 'YYYY-MM-DD',
           dirname:
-            process.env.NODE_ENV === 'local'
+            process.env.ENV === 'dev'
               ? path.join(process.cwd(), 'log')
               : '/root/node/apiLog',
           filename: '%DATE%_api.log',
@@ -39,7 +39,10 @@ import { LogUtil } from './log.util';
       ],
     }),
   ],
-  providers: [{ provide: APP_INTERCEPTOR, useClass: LogInterceptor }, LogUtil],
+  providers: [
+    { provide: APP_INTERCEPTOR, useClass: LogHttpInterceptor },
+    LogUtil,
+  ],
   exports: [LogUtil],
 })
 export class LogModule {}
