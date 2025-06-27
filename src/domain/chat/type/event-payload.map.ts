@@ -1,3 +1,4 @@
+import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 import { ChatRooms } from '../entity/ChatRooms.entity';
 import { EventErrorCode } from '../enums/chat-error-code.enum';
 import {
@@ -42,13 +43,36 @@ export type EventPayloadMap = {
 
   // 메시지 관련
   [EventMessage.SEND_MESSAGE]: void;
-  [EventMessage.NEW_MESSAGE]: void;
-  [EventMessage.MESSAGE_SENT]: {
+  [EventMessage.NEW_MESSAGE]: {
+    chatRoomId: string;
+    senderId: string;
+    senderType: UserRole;
+    messageId: string;
+    message: string;
+    type: ChatMessageType;
+    createdAt: Date;
+  };
+  [EventMessage.SEND_MESSAGE_SUCCESS]: {
     chatRoomId: string;
     messageId: string;
     message: string;
     type: ChatMessageType;
     createdAt: Date;
   };
-  [EventMessage.MESSAGE_FAILED]: void;
+  [EventMessage.SEND_MESSAGE_FAILED]: {
+    code: EventErrorCode;
+    message: string;
+  };
+  [EventMessage.READ_MESSAGE]: void;
+  [EventMessage.READ_MESSAGE_SUCCESS]: {
+    chatRoomId: string;
+    messageId: string;
+    readerId: string;
+    readerType: UserRole;
+    createdAt: Date;
+  };
+  [EventMessage.READ_MESSAGE_FAILED]: {
+    code: EventErrorCode;
+    message: string;
+  };
 };

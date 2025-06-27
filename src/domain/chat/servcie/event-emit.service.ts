@@ -12,6 +12,7 @@ import {
   EventMessage,
 } from '../enums/chat-event-type.enum';
 import { IChatEventResponse } from '../interface/chat-event-response.interface';
+import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 
 @Injectable()
 export class EventEmitService {
@@ -129,26 +130,11 @@ export class EventEmitService {
   }
 
   /**
-   * 메시지 전송 실패 이벤트 발송
-   * @param socket - 소켓 인스턴스
-   * @param socketId - 소켓 ID
-   * @param error - 에러
-   */
-  messageFailed(socket: Socket, errorCode: EventErrorCode, error: Error) {
-    this.emitFailed(
-      socket,
-      EventMessage.MESSAGE_FAILED,
-      errorCode,
-      error.message,
-    );
-  }
-
-  /**
    * 메시지 전송 성공 이벤트 발송
    * @param socket - 소켓 인스턴스
    * @param result - 메시지 전송 결과
    */
-  messageSent(
+  sendMessageSuccess(
     socket: Socket,
     result: {
       chatRoomId: string;
@@ -158,22 +144,110 @@ export class EventEmitService {
       createdAt: Date;
     },
   ) {
-    const response: EventPayloadMap[EventMessage.MESSAGE_SENT] = {
+    const response: EventPayloadMap[EventMessage.SEND_MESSAGE_SUCCESS] = {
       chatRoomId: result.chatRoomId,
       messageId: result.messageId,
       message: result.message,
       type: result.type,
       createdAt: result.createdAt,
     };
-    this.emitSuccess(socket, EventMessage.MESSAGE_SENT, response);
+
+    this.emitSuccess(socket, EventMessage.SEND_MESSAGE_SUCCESS, response);
+  }
+
+  /**
+   * 메시지 전송 실패 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param socketId - 소켓 ID
+   * @param error - 에러
+   */
+  sendMessageFailed(socket: Socket, errorCode: EventErrorCode, error: Error) {
+    this.emitFailed(
+      socket,
+      EventMessage.SEND_MESSAGE_FAILED,
+      errorCode,
+      error.message,
+    );
+  }
+
+  /**
+   * 새 메시지 수신 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param sender - 메시지 발신자 정보
+   * @param message - 메시지 정보
+   */
+  newMessage(
+    socket: Socket,
+    sender: {
+      userId: string;
+      userRole: UserRole;
+    },
+    message: {
+      chatRoomId: string;
+      messageId: string;
+      message: string;
+      type: ChatMessageType;
+      createdAt: Date;
+    },
+  ) {
+    const response: EventPayloadMap[EventMessage.NEW_MESSAGE] = {
+      senderId: sender.userId,
+      senderType: sender.userRole,
+      chatRoomId: message.chatRoomId,
+      messageId: message.messageId,
+      message: message.message,
+      type: message.type,
+      createdAt: message.createdAt,
+    };
+
     this.emitToRoom(
       socket,
-      result.chatRoomId,
+      message.chatRoomId,
       EventMessage.NEW_MESSAGE,
       response,
     );
   }
 
+  /**
+   * 메시지 읽음 처리 성공 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param result - 메시지 읽음 처리 결과
+   */
+  readMessageSuccess(
+    socket: Socket,
+    result: {
+      chatRoomId: string;
+      messageId: string;
+      readerId: string;
+      readerType: UserRole;
+      createdAt: Date;
+    },
+  ) {
+    const response: EventPayloadMap[EventMessage.READ_MESSAGE_SUCCESS] = {
+      chatRoomId: result.chatRoomId,
+      messageId: result.messageId,
+      readerId: result.readerId,
+      readerType: result.readerType,
+      createdAt: result.createdAt,
+    };
+
+    this.emitSuccess(socket, EventMessage.READ_MESSAGE_SUCCESS, response);
+  }
+
+  /**
+   * 메시지 읽음 처리 실패 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param errorCode - 에러 코드
+   * @param error - 에러
+   */
+  readMessageFailed(socket: Socket, errorCode: EventErrorCode, error: Error) {
+    this.emitFailed(
+      socket,
+      EventMessage.READ_MESSAGE_FAILED,
+      errorCode,
+      error.message,
+    );
+  }
   /**
    * 성공 응답 이벤트 발송
    * @param socket - 소켓 인스턴스
@@ -228,11 +302,11 @@ export class EventEmitService {
    * @param event - 이벤트 타입
    * @param data - 이벤트 데이터
    */
-  private emitToRoom(
+  private emitToRoom<T extends keyof EventPayloadMap>(
     socket: Socket,
     roomId: string,
-    event: keyof EventPayloadMap,
-    data: EventPayloadMap[keyof EventPayloadMap],
+    event: T,
+    data: EventPayloadMap[T],
   ) {
     const response: IChatEventResponse<keyof EventPayloadMap> = {
       success: true,
