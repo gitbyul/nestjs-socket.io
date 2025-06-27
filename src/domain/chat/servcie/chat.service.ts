@@ -230,9 +230,7 @@ export class ChatService {
           createdAt: new Date(),
         };
       } catch (error) {
-        this.logUtil.error(
-          `[ChatService] sendMessage failed: ${error.message}`,
-        );
+        this.logUtil.error(`[ChatService] sendMessage failed: ${error}`);
         throw error;
       }
     });
