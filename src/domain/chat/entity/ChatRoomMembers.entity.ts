@@ -3,7 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
   JoinColumn,
   ManyToOne,
 } from 'typeorm';
@@ -98,7 +97,7 @@ export class ChatRoomMembers extends ValidationEntity {
 
   @IsDate()
   @IsOptional()
-  @UpdateDateColumn({
+  @Column({
     name: 'left_at',
     type: 'datetime',
     nullable: true,
