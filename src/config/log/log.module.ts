@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as winston from 'winston';
 import * as winstonDailyRotateFile from 'winston-daily-rotate-file';
 import { LogHttpInterceptor } from './log-http.interceptor';
+import { LogWebSocketInterceptor } from './log-ws.interceptor';
 import { LogUtil } from './log.util';
 
 @Module({
@@ -25,7 +26,11 @@ import { LogUtil } from './log.util';
           level: 'debug',
           format: winston.format.combine(
             winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:SSS' }),
-            nestWinston.utilities.format.nestLike('API'),
+            winston.format.printf((info) => {
+              const { timestamp, level, message, context } = info as any;
+              const contextStr = context ? `[${context}] ` : '';
+              return `[API] ${process.pid} ${timestamp} ${level.toUpperCase().padEnd(7)} ${contextStr}${message}`;
+            }),
           ),
           datePattern: 'YYYY-MM-DD',
           dirname:
@@ -41,6 +46,7 @@ import { LogUtil } from './log.util';
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: LogHttpInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: LogWebSocketInterceptor },
     LogUtil,
   ],
   exports: [LogUtil],

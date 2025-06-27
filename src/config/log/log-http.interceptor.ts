@@ -27,7 +27,7 @@ export class LogHttpInterceptor implements NestInterceptor {
     logParam.body = _.cloneDeep(body);
 
     this.logger.info(
-      `[Request][${method}][${url}][${className}][${handlerName}]=>${JSON.stringify(logParam)}`,
+      `[HTTP][Request][${method}][${url}][${className}][${handlerName}]=>${JSON.stringify(logParam)}`,
     );
 
     return next.handle().pipe(
@@ -37,7 +37,7 @@ export class LogHttpInterceptor implements NestInterceptor {
         const delay = Date.now() - now.getTime();
 
         this.logger.info(
-          `[Response][${method}][${url}][${className}][${handlerName}][${statusCode}][${delay}ms]=>${JSON.stringify(data)}`,
+          `[HTTP][Response][${method}][${url}][${className}][${handlerName}][${statusCode}][${delay}ms]=>${JSON.stringify(data)}`,
         );
       }),
       catchError((error) => {
@@ -48,7 +48,7 @@ export class LogHttpInterceptor implements NestInterceptor {
           ? JSON.stringify(error.response)
           : '';
         this.logger.error(
-          `[Error][${method}][${url}][${className}][${handlerName}][${statusCode}][${delay}ms]=>[${errorMessage}] : ${errorResponse}`,
+          `[HTTP][Error][${method}][${url}][${className}][${handlerName}][${statusCode}][${delay}ms]=>[${errorMessage}] : ${errorResponse}`,
         );
         return throwError(() => error);
       }),
