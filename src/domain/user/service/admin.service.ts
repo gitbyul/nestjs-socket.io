@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { AdminUser } from '../entity/AdminUser.entity';
 
 @Injectable()
@@ -18,5 +18,11 @@ export class AdminService {
 
   async getAdminUserByEmail(email: string) {
     return this.adminUserRepository.findOne({ where: { email } });
+  }
+  async getAdminUserByEmailWithTransaction(
+    manager: EntityManager,
+    email: string,
+  ) {
+    return await manager.findOne(AdminUser, { where: { email } });
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Advertisers } from '../entity/Advertisers.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -18,5 +18,8 @@ export class AdvertiserService {
 
   async getAdvertiserById(id: string) {
     return this.advertiserRepository.findOne({ where: { id } });
+  }
+  async getAdvertiserByIdWithTransaction(manager: EntityManager, id: string) {
+    return await manager.findOne(Advertisers, { where: { id } });
   }
 }

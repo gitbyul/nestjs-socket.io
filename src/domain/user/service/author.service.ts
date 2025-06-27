@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Author } from '../entity/Author.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -18,5 +18,8 @@ export class AuthorService {
 
   async getAuthorById(id: string) {
     return this.authorRepository.findOne({ where: { id } });
+  }
+  async getAuthorByIdWithTransaction(manager: EntityManager, id: string) {
+    return await manager.findOne(Author, { where: { id } });
   }
 }
