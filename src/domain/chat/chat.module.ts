@@ -6,6 +6,7 @@ import { ChatRoomMemberService } from './servcie/chat-room-member.service';
 import { ChatMessageService } from './servcie/chat-message.service';
 import { ChatTemplateService } from './servcie/chat-templates.service';
 import { ChatService } from './servcie/chat.service';
+import { EventEmitService } from './servcie/event-emit.service';
 
 import { ChatGateway } from './chat.gateway';
 import { AuthModule } from 'src/domain/auth/auth.module';
@@ -17,7 +18,6 @@ import { ChatTemplates } from './entity/ChatTemplates.entity';
 import { ChatConnectedUsers } from './entity/ChatConnectedUsers.entity';
 import { ChatConnectionService } from './servcie/chat-connection.service';
 import { LogModule } from 'src/config/log/log.module';
-import { EventService } from './servcie/event.service';
 
 @Module({
   imports: [
@@ -39,7 +39,7 @@ import { EventService } from './servcie/event.service';
     ChatMessageService,
     ChatTemplateService,
     ChatConnectionService,
-    EventService,
+    EventEmitService,
   ],
 })
 export class ChatModule {}
