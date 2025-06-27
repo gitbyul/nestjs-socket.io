@@ -39,22 +39,13 @@ export class DtoValidationInterceptor implements NestInterceptor {
       const errors = await validate(dto);
 
       if (errors.length > 0) {
-        const eventName = EventMappingUtil.getFailureEventByHandler(
-          handler.name as keyof HandlerEventMap,
-        );
-
         const validationErrors = errors.map((e) => {
           const constraints = Object.values(e.constraints ?? {});
           const property = e.property;
           return { property, constraints };
         });
 
-        this.eventEmitService.validationFailed(
-          socket,
-          eventName,
-          validationErrors,
-        );
-
+        this.handleValidationFailed(socket, handler.name, validationErrors);
         return EMPTY;
       }
     } catch (error) {
@@ -63,7 +54,24 @@ export class DtoValidationInterceptor implements NestInterceptor {
       );
       return EMPTY;
     }
-
     return next.handle();
+  }
+
+  private handleValidationFailed(
+    socket: Socket,
+    handlerName: string,
+    validationErrors: any,
+  ) {
+    const eventName = EventMappingUtil.getFailureEventByHandler(
+      handlerName as keyof HandlerEventMap,
+    );
+
+    this.logUtil.error(
+      `[DtoValidationInterceptor][${handlerName}][${eventName}] Validation failed for socket ${socket.id}`,
+    );
+
+    this.eventEmitService.validationFailed(socket, eventName, validationErrors);
+
+    return EMPTY;
   }
 }
