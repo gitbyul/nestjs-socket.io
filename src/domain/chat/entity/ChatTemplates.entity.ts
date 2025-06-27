@@ -5,13 +5,25 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import {
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+
 import { ChatTemplateType } from '../enums/chat-template-type';
 
+import { ValidationEntity } from 'src/config/entity/Validation.entity';
+
 @Entity({ name: 'chat_templates' })
-export class ChatTemplates {
+export class ChatTemplates extends ValidationEntity {
   @PrimaryColumn({ type: 'char', length: 36, comment: 'UUID' })
   id: string;
 
+  @IsEnum(ChatTemplateType)
+  @IsNotEmpty()
   @Column({
     name: 'type',
     type: 'enum',
@@ -20,6 +32,8 @@ export class ChatTemplates {
   })
   type: ChatTemplateType;
 
+  @IsString()
+  @IsOptional()
   @Column({
     name: 'title',
     type: 'varchar',
@@ -29,6 +43,8 @@ export class ChatTemplates {
   })
   title: string;
 
+  @IsString()
+  @IsOptional()
   @Column({
     name: 'content',
     type: 'text',
@@ -37,6 +53,8 @@ export class ChatTemplates {
   })
   content?: string;
 
+  @IsString()
+  @IsOptional()
   @Column({
     name: 'bg_color',
     type: 'varchar',
@@ -46,6 +64,8 @@ export class ChatTemplates {
   })
   bgColor?: string;
 
+  @IsString()
+  @IsOptional()
   @Column({
     name: 'text_color',
     type: 'varchar',
@@ -55,6 +75,8 @@ export class ChatTemplates {
   })
   textColor?: string;
 
+  @IsString()
+  @IsOptional()
   @Column({
     name: 'button_color',
     type: 'varchar',
@@ -64,6 +86,8 @@ export class ChatTemplates {
   })
   buttonColor?: string;
 
+  @IsString()
+  @IsOptional()
   @Column({
     name: 'url',
     type: 'varchar',
@@ -73,9 +97,13 @@ export class ChatTemplates {
   })
   url?: string;
 
+  @IsDate()
+  @IsNotEmpty()
   @CreateDateColumn({ name: 'created_at', type: 'datetime', comment: '생성일' })
   createdAt: Date;
 
+  @IsDate()
+  @IsNotEmpty()
   @UpdateDateColumn({ name: 'updated_at', type: 'datetime', comment: '수정일' })
   updatedAt: Date;
 }

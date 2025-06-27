@@ -6,18 +6,30 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-
-import { ChatRoomMembers } from './ChatRoomMembers.entity';
-import { ChatMessages } from './ChatMessages.entity';
+import {
+  IsBoolean,
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 import { ChatRoomType } from 'src/domain/chat/enums/chat-room-type.enums';
 
+import { ValidationEntity } from 'src/config/entity/Validation.entity';
+import { ChatRoomMembers } from './ChatRoomMembers.entity';
+import { ChatMessages } from './ChatMessages.entity';
+
 @Entity({ name: 'chat_rooms' })
-export class ChatRooms {
+export class ChatRooms extends ValidationEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @IsEnum(ChatRoomType)
+  @IsNotEmpty()
   @Column({
     name: 'chat_room_type',
     type: 'enum',
@@ -27,6 +39,8 @@ export class ChatRooms {
   })
   chatRoomType: ChatRoomType;
 
+  @IsUUID()
+  @IsNotEmpty()
   @Column({
     name: 'chat_room_related_id',
     type: 'uuid',
@@ -35,6 +49,8 @@ export class ChatRooms {
   })
   chatRoomRelatedId: string;
 
+  @IsUUID()
+  @IsNotEmpty()
   @Column({
     name: 'operator_id',
     type: 'uuid',
@@ -43,6 +59,8 @@ export class ChatRooms {
   })
   operatorId: string;
 
+  @IsEnum(UserRole)
+  @IsNotEmpty()
   @Column({
     name: 'operator_type',
     type: 'enum',
@@ -52,6 +70,8 @@ export class ChatRooms {
   })
   operatorType: UserRole;
 
+  @IsBoolean()
+  @IsNotEmpty()
   @Column({
     name: 'alive',
     type: 'boolean',
@@ -60,6 +80,8 @@ export class ChatRooms {
   })
   alive: boolean;
 
+  @IsDate()
+  @IsOptional()
   @Column({
     name: 'deactivation_scheduled_at',
     type: 'datetime',
@@ -68,6 +90,8 @@ export class ChatRooms {
   })
   deactivationScheduledAt: Date | null;
 
+  @IsString()
+  @IsOptional()
   @Column({
     name: 'deactivation_reason',
     type: 'varchar',
@@ -77,6 +101,8 @@ export class ChatRooms {
   })
   deactivationReason: string | null;
 
+  @IsDate()
+  @IsOptional()
   @Column({
     name: 'last_message_at',
     type: 'datetime',
@@ -85,6 +111,8 @@ export class ChatRooms {
   })
   lastMessageAt: Date | null;
 
+  @IsString()
+  @IsOptional()
   @Column({
     name: 'last_message',
     type: 'text',
@@ -93,15 +121,29 @@ export class ChatRooms {
   })
   lastMessage: string | null;
 
+  @IsEnum(UserRole)
+  @IsOptional()
   @Column({
-    name: 'last_message_by',
+    name: 'last_message_by_role',
     type: 'enum',
     enum: UserRole,
     nullable: true,
     comment: '마지막 메시지 보낸 사람',
   })
-  lastMessageBy: UserRole | null;
+  lastMessageByRole: UserRole | null;
 
+  @IsUUID()
+  @IsOptional()
+  @Column({
+    name: 'last_message_by_id',
+    type: 'uuid',
+    nullable: true,
+    comment: '마지막 메시지 보낸 사람',
+  })
+  lastMessageById: string | null;
+
+  @IsDate()
+  @IsNotEmpty()
   @CreateDateColumn({
     name: 'created_at',
     type: 'datetime',
@@ -110,6 +152,8 @@ export class ChatRooms {
   })
   createdAt: Date;
 
+  @IsDate()
+  @IsNotEmpty()
   @UpdateDateColumn({
     name: 'updated_at',
     type: 'datetime',
@@ -121,29 +165,6 @@ export class ChatRooms {
   // relations
   @OneToMany(() => ChatRoomMembers, (chatRoomMember) => chatRoomMember.chatRoom)
   chatRoomMembers: ChatRoomMembers[];
-
   @OneToMany(() => ChatMessages, (chatMessage) => chatMessage.chatRoom)
   chatMessages: ChatMessages[];
-
-  // static methods
-  static create(params: {
-    chatRoomType: ChatRoomType;
-    chatRoomRelatedId: string;
-    operatorType: UserRole;
-    operatorId: string;
-  }): ChatRooms {
-    const chatRoom = new ChatRooms();
-    chatRoom.chatRoomType = params.chatRoomType;
-    chatRoom.chatRoomRelatedId = params.chatRoomRelatedId;
-    chatRoom.operatorType = params.operatorType;
-    chatRoom.operatorId = params.operatorId;
-    chatRoom.alive = true;
-    chatRoom.lastMessageAt = null;
-    chatRoom.lastMessage = null;
-    chatRoom.lastMessageBy = null;
-    chatRoom.createdAt = new Date();
-    chatRoom.updatedAt = new Date();
-
-    return chatRoom;
-  }
 }

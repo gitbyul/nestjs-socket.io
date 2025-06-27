@@ -7,14 +7,27 @@ import {
   JoinColumn,
   ManyToOne,
 } from 'typeorm';
-import { ChatRooms } from './ChatRooms.entity';
+import {
+  IsBoolean,
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsUUID,
+} from 'class-validator';
+
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 
+import { ValidationEntity } from 'src/config/entity/Validation.entity';
+import { ChatRooms } from './ChatRooms.entity';
+
 @Entity({ name: 'chat_room_members' })
-export class ChatRoomMembers {
+export class ChatRoomMembers extends ValidationEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @IsUUID()
+  @IsNotEmpty()
   @ManyToOne(() => ChatRooms, (chatRoom) => chatRoom.chatRoomMembers, {
     eager: false,
     nullable: false,
@@ -22,6 +35,8 @@ export class ChatRoomMembers {
   @JoinColumn({ name: 'chat_room_id' })
   chatRoom: ChatRooms;
 
+  @IsEnum(UserRole)
+  @IsNotEmpty()
   @Column({
     name: 'member_type',
     type: 'enum',
@@ -31,6 +46,8 @@ export class ChatRoomMembers {
   })
   memberType: UserRole;
 
+  @IsUUID()
+  @IsNotEmpty()
   @Column({
     name: 'member_id',
     type: 'uuid',
@@ -39,6 +56,8 @@ export class ChatRoomMembers {
   })
   memberId: string;
 
+  @IsUUID()
+  @IsOptional()
   @Column({
     name: 'last_read_message_id',
     type: 'uuid',
@@ -47,6 +66,8 @@ export class ChatRoomMembers {
   })
   lastReadMessageId: string | null;
 
+  @IsDate()
+  @IsOptional()
   @Column({
     name: 'last_read_at',
     type: 'datetime',
@@ -55,6 +76,8 @@ export class ChatRoomMembers {
   })
   lastReadAt: Date | null;
 
+  @IsBoolean()
+  @IsNotEmpty()
   @Column({
     name: 'alive',
     type: 'boolean',
@@ -63,6 +86,8 @@ export class ChatRoomMembers {
   })
   alive: boolean;
 
+  @IsDate()
+  @IsNotEmpty()
   @CreateDateColumn({
     name: 'joined_at',
     type: 'datetime',
@@ -71,6 +96,8 @@ export class ChatRoomMembers {
   })
   joinedAt: Date;
 
+  @IsDate()
+  @IsOptional()
   @UpdateDateColumn({
     name: 'left_at',
     type: 'datetime',
@@ -78,20 +105,4 @@ export class ChatRoomMembers {
     comment: '채팅 참여자 탈퇴 시간',
   })
   leftAt: Date | null;
-
-  static create(params: {
-    chatRoom: ChatRooms;
-    memberType: UserRole;
-    memberId: string;
-  }): ChatRoomMembers {
-    const chatRoomMember = new ChatRoomMembers();
-    chatRoomMember.chatRoom = params.chatRoom;
-    chatRoomMember.memberType = params.memberType;
-    chatRoomMember.memberId = params.memberId;
-    chatRoomMember.lastReadMessageId = null;
-    chatRoomMember.lastReadAt = null;
-    chatRoomMember.alive = true;
-    chatRoomMember.joinedAt = new Date();
-    return chatRoomMember;
-  }
 }
