@@ -29,7 +29,6 @@ export class ChatMessages extends ValidationEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @IsUUID()
   @IsNotEmpty()
   @ManyToOne(() => ChatRooms, (chatRoom) => chatRoom.chatMessages, {
     eager: false,
