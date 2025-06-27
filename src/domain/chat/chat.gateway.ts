@@ -41,14 +41,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(socket: Socket) {
     try {
+      this.logUtil.info(
+        `[WebSocket][handleConnection][Attempt][${socket.id}][${socket.handshake.address}]`,
+      );
+
       // 인증 토큰 검증
       const user = await this.authService.authenticateSocket(socket);
       // 유저 연결 초기화
       await this.chatService.initializeUserConnection(user, socket);
       this.eventEmitService.connectionEstablished(socket, user.id);
+
+      this.logUtil.info(
+        `[WebSocket][handleConnection][Success][${socket.id}][${user.id}][${user.role}]`,
+      );
     } catch (error) {
       this.logUtil.error(
-        `[ChatGateway] handleConnection: ${error} ${socket.id}`,
+        `[WebSocket][handleConnection][Failed][${socket.id}][${socket.handshake.address}][${error.message}]`,
       );
 
       // 유저 연결 해제 사전 작업
@@ -65,6 +73,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(socket: Socket) {
+    const userId = socket.data?.userId || 'unknown';
+    const userRole = socket.data?.userRole || 'unknown';
+
+    this.logUtil.info(
+      `[WebSocket][handleDisconnect][${socket.id}][${userId}][${userRole}]`,
+    );
+
     // 유저 연결 해제 사전 작업
     await this.chatService.disconnectUserWithDatabaseAndMemory(socket);
     // 연결 해제 이벤트 발송
@@ -86,8 +101,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const userId = socket.data.userId;
       this.chatService.updateUserLastActivity(userId);
       this.eventEmitService.heartbeatSuccess(socket, socket.id, userId);
+      this.logUtil.debug(
+        `[WebSocket][heartbeat][Success][${socket.id}][${userId}]`,
+      );
     } catch (error) {
-      this.logUtil.error(`[ChatGateway] heartbeat: ${error} ${socket.id}`);
+      this.logUtil.error(
+        `[WebSocket][heartbeat][Failed][${socket.id}][${socket.data?.userId || 'unknown'}][${error.message}]`,
+      );
       this.eventEmitService.heartbeatFailed(socket, socket.id);
     }
   }
@@ -105,8 +125,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const userId = socket.data.userId;
       const chatRooms = await this.chatService.getChatRooms(userId);
       this.eventEmitService.getChatRoomsSuccess(socket, chatRooms);
+      this.logUtil.info(
+        `[WebSocket][getChatRooms][Success][${socket.id}][${userId}][${chatRooms.length} rooms]`,
+      );
     } catch (error) {
-      this.logUtil.error(`[ChatGateway] joinChatRoom: ${error} ${socket.id}`);
+      this.logUtil.error(
+        `[WebSocket][getChatRooms][Failed][${socket.id}][${socket.data?.userId || 'unknown'}][${error.message}]`,
+      );
     }
   }
 
@@ -126,11 +151,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const userId = socket.data.userId as string;
       const userRole = socket.data.userRole as UserRole;
 
+      this.logUtil.info(
+        `[WebSocket][sendMessage][Attempt][${socket.id}][${userId}][${userRole}][${body.chatRoomId}]`,
+      );
+
       const result = await this.chatService.sendTextMessage(
         { userId, userRole },
         body,
       );
       this.eventEmitService.messageSent(socket, result);
+      this.logUtil.info(
+        `[WebSocket][sendMessage][Success][${socket.id}][${userId}][${userRole}][${body.chatRoomId}][${result.messageId}]`,
+      );
     } catch (error) {
       let errorCode = EventErrorCode.INTERNAL_ERROR;
       switch (error.constructor) {
@@ -142,6 +174,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           break;
       }
       this.eventEmitService.messageFailed(socket, errorCode, error);
+      this.logUtil.error(
+        `[WebSocket][sendMessage][Failed][${socket.id}][${socket.data?.userId || 'unknown'}][${socket.data?.userRole || 'unknown'}][${body?.chatRoomId || 'unknown'}][${errorCode}][${error.message}]`,
+      );
     }
   }
 }

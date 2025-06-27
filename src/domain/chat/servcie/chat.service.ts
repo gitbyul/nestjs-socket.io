@@ -78,7 +78,7 @@ export class ChatService {
       const userId = this.socketToUserMap.get(socketId);
       if (!userId) {
         this.logUtil.error(
-          `[ChatService] disconnectUser: userId not found ${socketId}`,
+          `[ChatService][disconnectUserWithDatabaseAndMemory] disconnectUser: userId not found ${socketId}`,
         );
         return;
       }
@@ -87,7 +87,7 @@ export class ChatService {
       const connectionInfo = this.userConnections.get(userId);
       if (!connectionInfo) {
         this.logUtil.error(
-          `[ChatService] disconnectUser: connectionInfo not found ${userId}`,
+          `[ChatService][disconnectUserWithDatabaseAndMemory] disconnectUser: connectionInfo not found ${userId}`,
         );
         return;
       }
@@ -112,7 +112,9 @@ export class ChatService {
       // DB에서 연결 정보 삭제
       await this.chatConnectionService.disconnect(userId, socketId);
     } catch (error) {
-      this.logUtil.error(`[ChatService] disconnectUser: ${error} ${socketId}`);
+      this.logUtil.error(
+        `[ChatService][disconnectUserWithDatabaseAndMemory] disconnectUser: ${error} ${socketId}`,
+      );
     }
   }
 
@@ -142,7 +144,7 @@ export class ChatService {
     const connectionInfo = this.userConnections.get(userId);
     if (!connectionInfo) {
       this.logUtil.error(
-        `[ChatService] updateUserLastActivity: connectionInfo not found ${userId}`,
+        `[ChatService][updateUserLastActivity] updateUserLastActivity: connectionInfo not found ${userId}`,
       );
       return;
     }
@@ -244,7 +246,9 @@ export class ChatService {
           createdAt: new Date(),
         };
       } catch (error) {
-        this.logUtil.error(`[ChatService] sendMessage failed: ${error}`);
+        this.logUtil.error(
+          `[ChatService][sendTextMessage] sendMessage failed: ${error}`,
+        );
         throw error;
       }
     });
