@@ -17,10 +17,16 @@ import { ChatRoomMemberService } from './chat-room-member.service';
 import { ChatConnectionService } from './chat-connection.service';
 import { UserService } from 'src/domain/user/service/user.service';
 
-import { SendMessageRequestDto } from '../dto/send-message.request';
+import { SendMessageRequestDto } from '../dto/request/send-message.request';
 
 import { UserNotFoundException } from 'src/config/exception/user-not-found.exception';
 import { ChatRoomNotFoundException } from 'src/config/exception/chat-room-not-found.exception';
+import { ReadMessageRequestDto } from '../dto/request/read-message.request';
+import { ChatMessageType } from '../enums/chat-message-type.enum';
+import { ChatMessageNotFoundException } from 'src/config/exception/chat-message-not-found.exception';
+import { ChatRoomMemberNotFoundException } from 'src/config/exception/chat-room-member-not-found.exception';
+import { ChatRoomMemberReadMessageOrderInvalidException } from 'src/config/exception/chat-room-member-read-message-order-invalid.exception';
+import { ChatRoomMemberReadMessageSameIdException } from 'src/config/exception/chat-room-member-read-message-same-id.exception';
 
 @Injectable()
 export class ChatService {
@@ -53,6 +59,15 @@ export class ChatService {
       userPayload,
       socket,
     );
+
+    // 채팅방 목록 조회
+    const activeChatRooms = await this.chatRoomService.getActiveChatRooms(
+      userPayload.id,
+    );
+
+    activeChatRooms.forEach((chatRoom) => {
+      socket.join(chatRoom.id);
+    });
 
     // 소켓 연결 정보 저장
     this.socketToUserMap.set(socket.id, userPayload.id);
@@ -92,6 +107,7 @@ export class ChatService {
         return;
       }
 
+      // TODO: 채팅방 로그아웃 알림 전송 로직 추가
       // // 채팅방 로그아웃 알림 전송
       // connectionInfo.joinedChatRooms.forEach(async (chatRoomId) => {
       //   const roomUsers = this.chatRoomUsers.get(chatRoomId);
@@ -183,7 +199,7 @@ export class ChatService {
   async sendTextMessage(
     user: { userId: string; userRole: UserRole },
     body: SendMessageRequestDto,
-  ): Promise<EventPayloadMap[EventMessage.MESSAGE_SENT]> {
+  ): Promise<EventPayloadMap[EventMessage.SEND_MESSAGE_SUCCESS]> {
     return this.dataSource.transaction(async (manager) => {
       try {
         // 1. 사용자 조회
@@ -199,7 +215,7 @@ export class ChatService {
         const chatRoom = await this.chatRoomService.getChatRoomWithTransaction(
           manager,
           {
-            chatRoomId: `body.chatRoomId`,
+            chatRoomId: body.chatRoomId,
             userId: user.userId,
           },
         );
@@ -214,7 +230,7 @@ export class ChatService {
             chatRoomId: body.chatRoomId,
             templateId: body.templateId ?? undefined,
             message: body.message,
-            type: body.messageType,
+            type: ChatMessageType.TEXT,
             senderType: user.userRole,
             senderId: user.userId,
           },
@@ -242,12 +258,131 @@ export class ChatService {
           chatRoomId: chatRoom.id,
           messageId: chatMessage.id,
           message: body.message,
-          type: body.messageType,
+          type: ChatMessageType.TEXT,
           createdAt: new Date(),
         };
       } catch (error) {
         this.logUtil.error(
           `[ChatService][sendTextMessage] sendMessage failed: ${error}`,
+        );
+        throw error;
+      }
+    });
+  }
+
+  async readMessage(
+    user: { userId: string; userRole: UserRole },
+    body: ReadMessageRequestDto,
+  ): Promise<EventPayloadMap[EventMessage.READ_MESSAGE_SUCCESS]> {
+    return this.dataSource.transaction(async (manager) => {
+      try {
+        // 1. 사용자 조회
+        const userExists = await this.userService.existsById(
+          user.userId,
+          user.userRole,
+        );
+        if (!userExists) {
+          throw new UserNotFoundException(user.userId, user.userRole);
+        }
+
+        // 2. 채팅방 조회
+        const chatRoom = await this.chatRoomService.getChatRoomWithTransaction(
+          manager,
+          {
+            chatRoomId: body.chatRoomId,
+            userId: user.userId,
+          },
+        );
+        if (!chatRoom) {
+          throw new ChatRoomNotFoundException(body.chatRoomId, user.userId);
+        }
+
+        // 3. 채팅방 멤버 조회
+        const chatRoomMember =
+          await this.chatRoomMemberService.getChatRoomMemberWithTransaction(
+            manager,
+            {
+              chatRoomId: chatRoom.id,
+              memberId: user.userId,
+            },
+          );
+        if (!chatRoomMember) {
+          throw new ChatRoomMemberNotFoundException(chatRoom.id, user.userId);
+        }
+
+        // 4. 메시지 조회
+        const chatMessages =
+          await this.chatMessageService.getChatMessageListWithTransaction(
+            manager,
+            {
+              chatRoomId: body.chatRoomId,
+              messageIds: [
+                body.messageId,
+                chatRoomMember.lastReadMessageId ?? '',
+              ],
+            },
+          );
+
+        const currentMessage = chatMessages.find(
+          (message) => message.id === body.messageId,
+        );
+        const previousMessage = chatMessages.find(
+          (message) => message.id === chatRoomMember.lastReadMessageId,
+        );
+
+        // 입력받은 메세지가 조회되지 않은 경우 예외 발생
+        if (!currentMessage) {
+          throw new ChatMessageNotFoundException(
+            body.messageId,
+            body.chatRoomId,
+          );
+        }
+
+        // 입력받은 메세지가 기존 메세지와 동일한 경우 예외 발생
+        if (currentMessage.id === previousMessage?.id) {
+          throw new ChatRoomMemberReadMessageSameIdException(
+            body.chatRoomId,
+            user.userId,
+            body.messageId,
+            previousMessage.id,
+          );
+        }
+
+        // 저장되어 있던 과거 메세지가 입력받은 메세지보다 신규 메세지 인 경우 예외 발생
+        if (
+          previousMessage?.createdAt &&
+          currentMessage.createdAt &&
+          previousMessage.createdAt > currentMessage.createdAt
+        ) {
+          throw new ChatRoomMemberReadMessageOrderInvalidException(
+            body.messageId,
+            currentMessage.createdAt,
+            previousMessage.id,
+            previousMessage.createdAt,
+            user.userId,
+          );
+        }
+
+        // 5. chat_room_members 상태값 업데이트
+        await this.chatRoomMemberService.updateLastReadMessageWithTransaction(
+          manager,
+          {
+            chatRoomId: chatRoom.id,
+            memberId: user.userId,
+            lastReadMessageId: body.messageId,
+          },
+        );
+
+        return {
+          chatRoomId: chatRoom.id,
+          messageId: body.messageId,
+          readerId: user.userId,
+          readerType: user.userRole,
+          createdAt: new Date(),
+        };
+      } catch (error) {
+        this.logUtil.error(
+          `[ChatService][readMessage] readMessage failed: ${error}`,
         );
         throw error;
       }
