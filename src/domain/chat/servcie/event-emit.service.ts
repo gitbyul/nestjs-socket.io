@@ -78,7 +78,7 @@ export class EventEmitService {
    * @param errorCode - 에러 코드
    * @param message - 에러 메시지
    */
-  userNotFound(
+  userValidationFailed(
     socket: Socket,
     eventName: keyof EventPayloadMap,
     message: string,
