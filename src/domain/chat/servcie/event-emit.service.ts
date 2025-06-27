@@ -35,6 +35,29 @@ export class EventEmitService {
   }
 
   /**
+   * 연결 실패 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param errorCode - 에러 코드
+   * @param message - 에러 메시지
+   */
+  connectionFailed(socket: Socket, errorCode: EventErrorCode, message: string) {
+    EventEmitUtil.emitFailed(
+      socket,
+      EventConnection.CONNECTION_FAILED,
+      errorCode,
+      message,
+    );
+  }
+
+  /**
+   * 연결 해제 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   */
+  disconnected(socket: Socket) {
+    EventEmitUtil.emitDisconnected(socket);
+  }
+
+  /**
    * 하트비트 성공 이벤트 발송
    * @param socket - 소켓 인스턴스
    * @param socketId - 소켓 ID
