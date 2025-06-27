@@ -11,11 +11,15 @@ import { Socket } from 'socket.io';
 import { VALIDATE_DTO_KEY } from 'src/config/decorator/validate-dto.decorator';
 import { HandlerEventMap } from '../type/handler-event.map';
 import { EventMappingUtil } from '../util/event-mapping.util';
-import { EventEmitUtil } from '../util/event-emit.util';
-import { EventErrorCode } from '../enums/chat-error-code.enum';
+import { EventEmitService } from '../servcie/event-emit.service';
+import { LogUtil } from 'src/config/log/log.util';
 
 @Injectable()
 export class DtoValidationInterceptor implements NestInterceptor {
+  constructor(
+    private readonly logUtil: LogUtil,
+    private readonly eventEmitService: EventEmitService,
+  ) {}
   async intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -45,17 +49,19 @@ export class DtoValidationInterceptor implements NestInterceptor {
           return { property, constraints };
         });
 
-        EventEmitUtil.emitFailed(
+        this.eventEmitService.validationFailed(
           socket,
           eventName,
-          EventErrorCode.VALIDATION_ERROR,
-          JSON.stringify(validationErrors),
+          validationErrors,
         );
 
         return EMPTY;
       }
     } catch (error) {
-      console.log(error);
+      this.logUtil.error(
+        `[DtoValidationInterceptor] intercept: ${error} ${socket.id}`,
+      );
+      return EMPTY;
     }
 
     return next.handle();

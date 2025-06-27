@@ -58,6 +58,25 @@ export class EventEmitService {
   }
 
   /**
+   * 유효성 검사 실패 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param errorCode - 에러 코드
+   * @param message - 에러 메시지
+   */
+  validationFailed(
+    socket: Socket,
+    eventName: keyof EventPayloadMap,
+    validationErrors: any,
+  ) {
+    EventEmitUtil.emitFailed(
+      socket,
+      eventName,
+      EventErrorCode.VALIDATION_ERROR,
+      JSON.stringify(validationErrors),
+    );
+  }
+
+  /**
    * 하트비트 성공 이벤트 발송
    * @param socket - 소켓 인스턴스
    * @param socketId - 소켓 ID
