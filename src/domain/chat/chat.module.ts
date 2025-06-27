@@ -9,7 +9,9 @@ import { ChatService } from './servcie/chat.service';
 import { EventEmitService } from './servcie/event-emit.service';
 
 import { ChatGateway } from './chat.gateway';
-import { AuthModule } from 'src/domain/auth/auth.module';
+import { AuthModule } from '../auth/auth.module';
+import { LogModule } from '../../config/log/log.module';
+import { UserModule } from '../user/user.module';
 
 import { ChatRooms } from './entity/ChatRooms.entity';
 import { ChatMessages } from './entity/ChatMessages.entity';
@@ -17,11 +19,11 @@ import { ChatRoomMembers } from './entity/ChatRoomMembers.entity';
 import { ChatTemplates } from './entity/ChatTemplates.entity';
 import { ChatConnectedUsers } from './entity/ChatConnectedUsers.entity';
 import { ChatConnectionService } from './servcie/chat-connection.service';
-import { LogModule } from 'src/config/log/log.module';
 
 @Module({
   imports: [
     AuthModule,
+    LogModule,
     TypeOrmModule.forFeature([
       ChatRooms,
       ChatMessages,
@@ -29,7 +31,7 @@ import { LogModule } from 'src/config/log/log.module';
       ChatTemplates,
       ChatConnectedUsers,
     ]),
-    LogModule,
+    UserModule,
   ],
   providers: [
     ChatGateway,
