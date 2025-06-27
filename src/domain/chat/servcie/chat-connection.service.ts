@@ -14,7 +14,7 @@ export class ChatConnectionService {
 
   async connection(userId: string, role: UserRole, socketId: string) {
     const existingUser = await this.chatConnectedUsersRepository.exists({
-      where: { userId },
+      where: { userId, alive: true },
     });
     if (existingUser) {
       await this.chatConnectedUsersRepository.update(
@@ -22,7 +22,7 @@ export class ChatConnectionService {
         { socketId, alive: true, loginAt: new Date() },
       );
     } else {
-      const connectedUser = ChatConnectedUsers.create({
+      const connectedUser = ChatConnectedUsers.newConnectedUser({
         userId,
         role,
         socketId,
@@ -31,10 +31,10 @@ export class ChatConnectionService {
     }
   }
 
-  async disconnect(socketId: string) {
+  async disconnect(userId: string, socketId: string) {
     await this.chatConnectedUsersRepository.update(
-      { socketId },
-      { socketId: null, alive: false, logoutAt: new Date() },
+      { userId, socketId },
+      { alive: false, logoutAt: new Date(), lastActivityAt: new Date() },
     );
   }
 }
