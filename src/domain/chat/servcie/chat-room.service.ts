@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
 import { ChatRooms } from '../entity/ChatRooms.entity';
+
 import { GetChatRoomDto } from '../dto/get-chat-room.dto';
 import { UpdateChatRoomLastMessageDto } from '../dto/update-chat-room-last-message.dto';
 
@@ -26,6 +27,22 @@ export class ChatRoomService {
         },
       },
     });
+    return chatRooms;
+  }
+
+  /**
+   * 활성 채팅방 목록 조회
+   * @param userId 사용자 ID
+   * @returns 활성 채팅방 목록
+   */
+  async getActiveChatRooms(userId: string) {
+    const chatRooms = await this.chatRoomsRepository.find({
+      where: {
+        chatRoomMembers: { memberId: userId },
+        alive: true,
+      },
+    });
+
     return chatRooms;
   }
 
