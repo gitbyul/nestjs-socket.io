@@ -77,6 +77,26 @@ export class EventEmitService {
   }
 
   /**
+   * 유저 연결 실패 이벤트 발송 (유저 연결 상태 확인 실패)
+   * @param socket - 소켓 인스턴스
+   * @param eventName - 이벤트 이름
+   * @param errorCode - 에러 코드
+   * @param message - 에러 메시지
+   */
+  userNotFound(
+    socket: Socket,
+    eventName: keyof EventPayloadMap,
+    message: string,
+  ) {
+    EventEmitUtil.emitFailed(
+      socket,
+      eventName,
+      EventErrorCode.USER_NOT_FOUND,
+      message,
+    );
+  }
+
+  /**
    * 하트비트 성공 이벤트 발송
    * @param socket - 소켓 인스턴스
    * @param socketId - 소켓 ID
