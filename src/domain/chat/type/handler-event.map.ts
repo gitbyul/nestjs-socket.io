@@ -14,4 +14,5 @@ export type HandlerEventMap = {
 
   // 메시지 관련
   sendMessage: EventMessage.SEND_MESSAGE;
+  readMessage: EventMessage.READ_MESSAGE;
 };

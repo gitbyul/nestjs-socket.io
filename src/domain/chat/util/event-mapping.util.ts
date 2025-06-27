@@ -13,6 +13,7 @@ export class EventMappingUtil {
     heartbeat: EventHeartBeat.HEARTBEAT,
     getChatRooms: EventChatRoom.GET_CHAT_ROOMS,
     sendMessage: EventMessage.SEND_MESSAGE,
+    readMessage: EventMessage.READ_MESSAGE,
   };
 
   // 이벤트 이름 → 실패 이벤트 매핑
@@ -20,7 +21,8 @@ export class EventMappingUtil {
     [EventConnection.CONNECTION_ESTABLISHED]: EventConnection.CONNECTION_FAILED,
     [EventHeartBeat.HEARTBEAT]: EventHeartBeat.HEARTBEAT_FAILED,
     [EventChatRoom.GET_CHAT_ROOMS]: EventChatRoom.GET_CHAT_ROOMS_FAILED,
-    [EventMessage.SEND_MESSAGE]: EventMessage.MESSAGE_FAILED,
+    [EventMessage.SEND_MESSAGE]: EventMessage.SEND_MESSAGE_FAILED,
+    [EventMessage.READ_MESSAGE]: EventMessage.READ_MESSAGE_FAILED,
   };
 
   /**

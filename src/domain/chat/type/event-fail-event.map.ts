@@ -17,5 +17,6 @@ export type EventFailEventMap = {
   [EventChatRoom.GET_CHAT_ROOMS]: EventChatRoom.GET_CHAT_ROOMS_FAILED;
 
   // 메시지 관련
-  [EventMessage.SEND_MESSAGE]: EventMessage.MESSAGE_FAILED;
+  [EventMessage.SEND_MESSAGE]: EventMessage.SEND_MESSAGE_FAILED;
+  [EventMessage.READ_MESSAGE]: EventMessage.READ_MESSAGE_FAILED;
 };
