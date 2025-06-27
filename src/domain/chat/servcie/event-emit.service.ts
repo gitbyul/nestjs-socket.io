@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-
 import { EventErrorCode } from '../enums/chat-error-code.enum';
-import { EventEmitUtil } from '../util/event-emit.util';
 import { EventPayloadMap } from '../type/event-payload.map';
 import { ConnectionStatus } from '../enums/connection-state.enum';
 import { ChatRooms } from '../entity/ChatRooms.entity';
@@ -13,6 +11,7 @@ import {
   EventHeartBeat,
   EventMessage,
 } from '../enums/chat-event-type.enum';
+import { IChatEventResponse } from '../interface/chat-event-response.interface';
 
 @Injectable()
 export class EventEmitService {
@@ -27,11 +26,7 @@ export class EventEmitService {
       status: ConnectionStatus.CONNECTED,
       timestamp: new Date(),
     };
-    EventEmitUtil.emitSuccess(
-      socket,
-      EventConnection.CONNECTION_ESTABLISHED,
-      response,
-    );
+    this.emitSuccess(socket, EventConnection.CONNECTION_ESTABLISHED, response);
   }
 
   /**
@@ -41,7 +36,7 @@ export class EventEmitService {
    * @param message - 에러 메시지
    */
   connectionFailed(socket: Socket, errorCode: EventErrorCode, message: string) {
-    EventEmitUtil.emitFailed(
+    this.emitFailed(
       socket,
       EventConnection.CONNECTION_FAILED,
       errorCode,
@@ -54,7 +49,7 @@ export class EventEmitService {
    * @param socket - 소켓 인스턴스
    */
   disconnected(socket: Socket) {
-    EventEmitUtil.emitDisconnected(socket);
+    socket.emit(EventConnection.DISCONNECTED, {});
   }
 
   /**
@@ -68,10 +63,10 @@ export class EventEmitService {
     eventName: keyof EventPayloadMap,
     validationErrors: any,
   ) {
-    EventEmitUtil.emitFailed(
+    this.emitFailed(
       socket,
       eventName,
-      EventErrorCode.VALIDATION_ERROR,
+      EventErrorCode.VALIDATION_FAILED,
       JSON.stringify(validationErrors),
     );
   }
@@ -88,12 +83,7 @@ export class EventEmitService {
     eventName: keyof EventPayloadMap,
     message: string,
   ) {
-    EventEmitUtil.emitFailed(
-      socket,
-      eventName,
-      EventErrorCode.USER_NOT_FOUND,
-      message,
-    );
+    this.emitFailed(socket, eventName, EventErrorCode.USER_NOT_FOUND, message);
   }
 
   /**
@@ -108,11 +98,7 @@ export class EventEmitService {
       socketId: socketId,
       timestamp: new Date(),
     };
-    EventEmitUtil.emitSuccess(
-      socket,
-      EventHeartBeat.HEARTBEAT_SUCCESS,
-      response,
-    );
+    this.emitSuccess(socket, EventHeartBeat.HEARTBEAT_SUCCESS, response);
   }
 
   /**
@@ -121,7 +107,7 @@ export class EventEmitService {
    * @param socketId - 소켓 ID
    */
   heartbeatFailed(socket: Socket, socketId: string) {
-    EventEmitUtil.emitFailed(
+    this.emitFailed(
       socket,
       EventHeartBeat.HEARTBEAT_FAILED,
       EventErrorCode.USER_NOT_FOUND,
@@ -137,12 +123,9 @@ export class EventEmitService {
   getChatRoomsSuccess(socket: Socket, chatRooms: ChatRooms[]) {
     const response: EventPayloadMap[EventChatRoom.GET_CHAT_ROOMS_SUCCESS] = {
       chatRooms: chatRooms,
+      timestamp: new Date(),
     };
-    EventEmitUtil.emitSuccess(
-      socket,
-      EventChatRoom.GET_CHAT_ROOMS_SUCCESS,
-      response,
-    );
+    this.emitSuccess(socket, EventChatRoom.GET_CHAT_ROOMS_SUCCESS, response);
   }
 
   /**
@@ -151,16 +134,12 @@ export class EventEmitService {
    * @param socketId - 소켓 ID
    * @param error - 에러
    */
-  sendMessageFailed(
-    socket: Socket,
-    errorCode: EventErrorCode,
-    message: string,
-  ) {
-    EventEmitUtil.emitFailed(
+  messageFailed(socket: Socket, errorCode: EventErrorCode, error: Error) {
+    this.emitFailed(
       socket,
       EventMessage.MESSAGE_FAILED,
       errorCode,
-      message,
+      error.message,
     );
   }
 
@@ -186,6 +165,82 @@ export class EventEmitService {
       type: result.type,
       createdAt: result.createdAt,
     };
-    EventEmitUtil.emitSuccess(socket, EventMessage.MESSAGE_SENT, response);
+    this.emitSuccess(socket, EventMessage.MESSAGE_SENT, response);
+    this.emitToRoom(
+      socket,
+      result.chatRoomId,
+      EventMessage.NEW_MESSAGE,
+      response,
+    );
+  }
+
+  /**
+   * 성공 응답 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param event - 이벤트 타입
+   * @param data - 이벤트 데이터
+   */
+  private emitSuccess<T extends keyof EventPayloadMap>(
+    socket: Socket,
+    event: T,
+    data: EventPayloadMap[T],
+  ) {
+    const response: IChatEventResponse<T> = {
+      success: true,
+      event,
+      data,
+      timestamp: new Date(),
+    };
+
+    socket.emit(event, response);
+  }
+
+  /**
+   * 실패 응답 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param event - 이벤트 타입
+   * @param code - 오류 코드
+   * @param message - 오류 메시지
+   */
+  private emitFailed(
+    socket: Socket,
+    event: keyof EventPayloadMap,
+    code: EventErrorCode,
+    message: string,
+  ) {
+    const response: IChatEventResponse<keyof EventPayloadMap> = {
+      success: false,
+      event,
+      error: {
+        code,
+        message,
+      },
+      timestamp: new Date(),
+    };
+
+    socket.emit(event, response);
+  }
+
+  /**
+   * 방 내부 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param roomId - 방 ID
+   * @param event - 이벤트 타입
+   * @param data - 이벤트 데이터
+   */
+  private emitToRoom(
+    socket: Socket,
+    roomId: string,
+    event: keyof EventPayloadMap,
+    data: EventPayloadMap[keyof EventPayloadMap],
+  ) {
+    const response: IChatEventResponse<keyof EventPayloadMap> = {
+      success: true,
+      event,
+      data,
+      timestamp: new Date(),
+    };
+
+    socket.to(roomId).emit(event, response);
   }
 }
