@@ -13,7 +13,7 @@ export enum EventErrorCode {
   NOT_MEMBER = 'NOT_MEMBER',
 
   // 유효성 검사 관련
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  VALIDATION_FAILED = 'VALIDATION_FAILED',
 
   // 시스템 관련
   INTERNAL_ERROR = 'INTERNAL_ERROR',

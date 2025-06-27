@@ -36,6 +36,7 @@ export type EventPayloadMap = {
   [EventChatRoom.GET_CHAT_ROOMS]: void;
   [EventChatRoom.GET_CHAT_ROOMS_SUCCESS]: {
     chatRooms: ChatRooms[];
+    timestamp: Date;
   };
   [EventChatRoom.GET_CHAT_ROOMS_FAILED]: void;
 

@@ -7,6 +7,9 @@ import { ChatMessages } from 'src/domain/chat/entity/ChatMessages.entity';
 import { ChatRoomMembers } from 'src/domain/chat/entity/ChatRoomMembers.entity';
 import { ChatRooms } from 'src/domain/chat/entity/ChatRooms.entity';
 import { ChatTemplates } from 'src/domain/chat/entity/ChatTemplates.entity';
+import { AdminUser } from 'src/domain/user/entity/AdminUser.entity';
+import { Advertisers } from 'src/domain/user/entity/Advertisers.entity';
+import { Author } from 'src/domain/user/entity/Author.entity';
 
 @Module({
   imports: [
@@ -28,6 +31,9 @@ import { ChatTemplates } from 'src/domain/chat/entity/ChatTemplates.entity';
           ChatRoomMembers,
           ChatTemplates,
           ChatConnectedUsers,
+          Author,
+          Advertisers,
+          AdminUser,
         ],
       }),
     }),
