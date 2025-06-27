@@ -17,6 +17,7 @@ import { ChatTemplates } from './entity/ChatTemplates.entity';
 import { ChatConnectedUsers } from './entity/ChatConnectedUsers.entity';
 import { ChatConnectionService } from './servcie/chat-connection.service';
 import { LogModule } from 'src/config/log/log.module';
+import { EventService } from './servcie/event.service';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { LogModule } from 'src/config/log/log.module';
     ChatMessageService,
     ChatTemplateService,
     ChatConnectionService,
+    EventService,
   ],
 })
 export class ChatModule {}
