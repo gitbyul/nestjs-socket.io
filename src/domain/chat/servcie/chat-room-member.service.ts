@@ -12,6 +12,15 @@ export class ChatRoomMemberService {
     private chatRoomMembersRepository: Repository<ChatRoomMembers>,
   ) {}
 
+  async getChatRoomMemberWithTransaction(
+    manager: EntityManager,
+    dto: { chatRoomId: string; memberId: string },
+  ) {
+    return await manager.findOne(ChatRoomMembers, {
+      where: { chatRoom: { id: dto.chatRoomId }, memberId: dto.memberId },
+    });
+  }
+
   /**
    * 채팅방 멤버 마지막 읽은 메시지 업데이트
    * @param chatRoomId - 채팅방 ID
