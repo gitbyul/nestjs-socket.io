@@ -25,6 +25,10 @@ import { EventEmitService } from './servcie/event-emit.service';
 
 import { SendMessageRequestDto } from './dto/send-message.request';
 import { EventErrorCode } from './enums/chat-error-code.enum';
+import { UserRole } from '../auth/enums/user-role.enum';
+import { UserNotFoundException } from 'src/config/exception/user-not-found.exception';
+import { ChatRoomNotFoundException } from 'src/config/exception/chat-room-not-found.exception';
+
 @WebSocketGateway()
 @UseInterceptors(DtoValidationInterceptor)
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -118,16 +122,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() socket: Socket,
     @MessageBody() body: SendMessageRequestDto,
   ) {
-    // try {
-    //   const userId = socket.data.userId as string;
-    //   const userRole = socket.data.userRole as UserRole;
-    //   const result = await this.chatService.sendMessage(
-    //     { userId, userRole },
-    //     body,
-    //   );
-    //   this.eventService.messageSent(socket, result);
-    // } catch (error) {
-    //   this.logUtil.error(`[ChatGateway] sendMessage: ${error} ${socket.id}`);
-    // }
+    try {
+      const userId = socket.data.userId as string;
+      const userRole = socket.data.userRole as UserRole;
+
+      const result = await this.chatService.sendTextMessage(
+        { userId, userRole },
+        body,
+      );
+      this.eventEmitService.messageSent(socket, result);
+    } catch (error) {
+      let errorCode = EventErrorCode.INTERNAL_ERROR;
+      switch (error.constructor) {
+        case UserNotFoundException:
+          errorCode = EventErrorCode.USER_NOT_FOUND;
+          break;
+        case ChatRoomNotFoundException:
+          errorCode = EventErrorCode.CHAT_ROOM_NOT_FOUND;
+          break;
+      }
+      this.eventEmitService.messageFailed(socket, errorCode, error);
+    }
   }
 }

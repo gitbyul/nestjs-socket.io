@@ -1,20 +1,26 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { DataSource } from 'typeorm';
 import { LogUtil } from 'src/config/log/log.util';
 
+import { EventPayloadMap } from '../type/event-payload.map';
 import { UserPayload } from 'src/config/type/user-payload.type';
 import { IMemoryUserConnectionInfo } from '../interface/memory-user-connection-info.interface';
 import { ConnectionStatus } from '../enums/connection-state.enum';
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
+import { EventMessage } from '../enums/chat-event-type.enum';
 
 import { ChatRoomService } from './chat-room.service';
 import { ChatMessageService } from './chat-message.service';
 import { ChatTemplateService } from './chat-templates.service';
 import { ChatRoomMemberService } from './chat-room-member.service';
 import { ChatConnectionService } from './chat-connection.service';
+import { UserService } from 'src/domain/user/service/user.service';
 
 import { SendMessageRequestDto } from '../dto/send-message.request';
+
+import { UserNotFoundException } from 'src/config/exception/user-not-found.exception';
+import { ChatRoomNotFoundException } from 'src/config/exception/chat-room-not-found.exception';
 
 @Injectable()
 export class ChatService {
@@ -34,6 +40,7 @@ export class ChatService {
     private readonly chatMessageService: ChatMessageService,
     private readonly chatTemplateService: ChatTemplateService,
     private readonly chatConnectionService: ChatConnectionService,
+    private readonly userService: UserService,
   ) {}
 
   /**
@@ -42,7 +49,7 @@ export class ChatService {
    * @param socket 소켓 정보
    */
   async initializeUserConnection(userPayload: UserPayload, socket: Socket) {
-    const userConnectionInfo = await this.createUserConnectionInfo(
+    const userConnectionInfo = this.createUserConnectionInfo(
       userPayload,
       socket,
     );
@@ -85,18 +92,18 @@ export class ChatService {
         return;
       }
 
-      // 채팅방 로그아웃 알림 전송
-      connectionInfo.joinedChatRooms.forEach(async (chatRoomId) => {
-        const roomUsers = this.chatRoomUsers.get(chatRoomId);
-        if (roomUsers) {
-          // 메모리에서 채팅방 유저 정보 삭제
-          roomUsers.delete(userId);
-          // // 채팅방 유저 정보 삭제 이벤트 전송 -- gateway 에서 처리로
-          // this.broadcastUserLeftChatRoom(chatRoomId, userId);
-          // // DB에서 채팅방 로그아웃 처리
-          // await this.chatRoomMemberService.leaveRoom(userId, chatRoomId);
-        }
-      });
+      // // 채팅방 로그아웃 알림 전송
+      // connectionInfo.joinedChatRooms.forEach(async (chatRoomId) => {
+      //   const roomUsers = this.chatRoomUsers.get(chatRoomId);
+      //   if (roomUsers) {
+      //     // 메모리에서 채팅방 유저 정보 삭제
+      //     roomUsers.delete(userId);
+      //     // // 채팅방 유저 정보 삭제 이벤트 전송 -- gateway 에서 처리로
+      //     // this.broadcastUserLeftChatRoom(chatRoomId, userId);
+      //     // // DB에서 채팅방 로그아웃 처리
+      //     // await this.chatRoomMemberService.leaveRoom(userId, chatRoomId);
+      //   }
+      // });
 
       // 사용자 연결 정보 삭제
       this.userConnections.delete(userId);
@@ -163,7 +170,7 @@ export class ChatService {
   }
 
   /**
-   * 메시지 전송
+   * 텍스트 메시지 전송
    * @param user 사용자 정보
    * @param chatRoomId 채팅방 ID
    * @param message 메시지
@@ -171,27 +178,34 @@ export class ChatService {
    * @param templateId 템플릿 ID (Optional)
    * @returns 메시지 정보
    */
-  async sendMessage(
+  async sendTextMessage(
     user: { userId: string; userRole: UserRole },
     body: SendMessageRequestDto,
-  ) {
+  ): Promise<EventPayloadMap[EventMessage.MESSAGE_SENT]> {
     return this.dataSource.transaction(async (manager) => {
       try {
-        // 1. chat_rooms(채팅방) 조회
+        // 1. 사용자 조회
+        const userExists = await this.userService.existsById(
+          user.userId,
+          user.userRole,
+        );
+        if (!userExists) {
+          throw new UserNotFoundException(user.userId, user.userRole);
+        }
+
+        // 2. chat_rooms(채팅방) 조회
         const chatRoom = await this.chatRoomService.getChatRoomWithTransaction(
           manager,
           {
-            chatRoomId: body.chatRoomId,
+            chatRoomId: `body.chatRoomId`,
             userId: user.userId,
           },
         );
         if (!chatRoom) {
-          throw new NotFoundException(
-            `[ChatService] sendMessage: chatRoom not found ${body.chatRoomId}`,
-          );
+          throw new ChatRoomNotFoundException(body.chatRoomId, user.userId);
         }
 
-        // 2. 메시지 저장
+        // 3. 메시지 저장
         const chatMessage = await this.chatMessageService.createWithTransaction(
           manager,
           {
@@ -204,7 +218,7 @@ export class ChatService {
           },
         );
 
-        // 3. chat_rooms 상태값 업데이트
+        // 4. chat_rooms 상태값 업데이트
         await this.chatRoomService.updateLastMessageWithTransaction(manager, {
           chatRoomId: body.chatRoomId,
           message: body.message,
@@ -212,7 +226,7 @@ export class ChatService {
           senderId: user.userId,
         });
 
-        // 4. chat_room_members 상태값 업데이트
+        // 5. chat_room_members 상태값 업데이트
         await this.chatRoomMemberService.updateLastReadMessageWithTransaction(
           manager,
           {
@@ -242,10 +256,7 @@ export class ChatService {
    * @param socket 소켓 정보
    * @returns 사용자 연결 정보
    */
-  private async createUserConnectionInfo(
-    userPayload: UserPayload,
-    socket: Socket,
-  ) {
+  private createUserConnectionInfo(userPayload: UserPayload, socket: Socket) {
     const userConnectionInfo: IMemoryUserConnectionInfo = {
       userId: userPayload.id,
       socketId: socket.id,
