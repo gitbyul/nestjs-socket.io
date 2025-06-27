@@ -11,7 +11,7 @@ import { Socket } from 'socket.io';
 import { VALIDATE_DTO_KEY } from 'src/config/decorator/validate-dto.decorator';
 import { HandlerEventMap } from '../type/handler-event.map';
 import { EventMappingUtil } from '../util/event-mapping.util';
-import { ChatEventUtil } from '../util/chat-event.util';
+import { EventEmitUtil } from '../util/event-emit.util';
 import { EventErrorCode } from '../enums/chat-error-code.enum';
 
 @Injectable()
@@ -45,7 +45,7 @@ export class DtoValidationInterceptor implements NestInterceptor {
           return { property, constraints };
         });
 
-        ChatEventUtil.emitFailed(
+        EventEmitUtil.emitFailed(
           socket,
           eventName,
           EventErrorCode.VALIDATION_ERROR,
