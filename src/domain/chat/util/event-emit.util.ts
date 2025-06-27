@@ -2,6 +2,7 @@ import { Socket } from 'socket.io';
 import { EventPayloadMap } from '../type/event-payload.map';
 import { IChatEventResponse } from '../interface/chat-event-response.interface';
 import { EventErrorCode } from '../enums/chat-error-code.enum';
+import { EventConnection } from '../enums/chat-event-type.enum';
 
 export class EventEmitUtil {
   /**
@@ -49,6 +50,14 @@ export class EventEmitUtil {
     };
 
     socket.emit(event, response);
+  }
+
+  /**
+   * 연결 해제 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   */
+  static emitDisconnected(socket: Socket) {
+    socket.emit(EventConnection.DISCONNECTED, {});
   }
 
   /**
