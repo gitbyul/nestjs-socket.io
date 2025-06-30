@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 
 import { Socket } from 'socket.io';
 import { UserPayload } from 'src/config/type/user-payload.type';
+import { TokenType } from './enums/token-type.enum';
 
 @Injectable()
 export class AuthService {
@@ -18,9 +19,13 @@ export class AuthService {
     ) as string;
   }
 
-  authenticateSocket(socket: Socket) {
+  async authenticateSocket(socket: Socket) {
     const token = this.extractWebSocketJwtToken(socket);
-    return this.verifyToken(token);
+    const payload = await this.verifyToken(token);
+    if (!this.isAccessToken(payload)) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    return payload;
   }
 
   private extractWebSocketJwtToken(socket: Socket) {
@@ -44,5 +49,9 @@ export class AuthService {
       console.log(error);
       throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  private isAccessToken(payload: UserPayload) {
+    return payload.tokenType === TokenType.ACCESS;
   }
 }
