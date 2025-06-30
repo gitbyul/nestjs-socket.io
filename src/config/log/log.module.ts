@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
 import * as nestWinston from 'nest-winston';
 import { WinstonModule } from 'nest-winston';
 import * as path from 'path';
@@ -44,11 +43,7 @@ import { LogUtil } from './log.util';
       ],
     }),
   ],
-  providers: [
-    { provide: APP_INTERCEPTOR, useClass: LogHttpInterceptor },
-    { provide: APP_INTERCEPTOR, useClass: LogWebSocketInterceptor },
-    LogUtil,
-  ],
-  exports: [LogUtil],
+  providers: [LogHttpInterceptor, LogWebSocketInterceptor, LogUtil],
+  exports: [LogUtil, LogHttpInterceptor, LogWebSocketInterceptor],
 })
 export class LogModule {}

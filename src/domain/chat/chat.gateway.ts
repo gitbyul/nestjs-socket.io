@@ -32,8 +32,10 @@ import { ReadMessageRequestDto } from './dto/request/read-message.request';
 import { ChatMessageNotFoundException } from 'src/config/exception/chat-message-not-found.exception';
 import { ChatRoomMemberReadMessageOrderInvalidException } from 'src/config/exception/chat-room-member-read-message-order-invalid.exception';
 import { ChatRoomMemberReadMessageSameIdException } from 'src/config/exception/chat-room-member-read-message-same-id.exception';
+import { LogWebSocketInterceptor } from 'src/config/log/log-ws.interceptor';
 
 @WebSocketGateway()
+@UseInterceptors(LogWebSocketInterceptor)
 @UseInterceptors(DtoValidationInterceptor)
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
