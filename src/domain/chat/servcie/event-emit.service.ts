@@ -248,6 +248,60 @@ export class EventEmitService {
       error.message,
     );
   }
+
+  /**
+   * 읽지 않은 메시지 수 업데이트 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param socketId - 소켓 ID
+   * @param chatRoomId - 채팅방 ID
+   * @param unreadCount - 읽지 않은 메시지 수
+   * @param createdAt - 생성 일시
+   */
+  unreadCountUpdated(
+    socket: Socket,
+    socketId: string,
+    unreadCountMember: {
+      chatRoomId: string;
+      unreadCount: number;
+      updatedAt: Date;
+    },
+  ) {
+    const response: EventPayloadMap[EventMessage.UNREAD_COUNT_UPDATED] = {
+      chatRoomId: unreadCountMember.chatRoomId,
+      unreadCount: unreadCountMember.unreadCount,
+      updatedAt: unreadCountMember.updatedAt,
+    };
+    this.emitToSocketId(
+      socket,
+      socketId,
+      EventMessage.UNREAD_COUNT_UPDATED,
+      response,
+    );
+  }
+
+  /**
+   * 읽지 않은 메시지 수 요약 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param unreadCountSummary - 읽지 않은 메시지 수 요약
+   */
+  unreadCountSummary(
+    socket: Socket,
+    unreadCountSummary: {
+      chatRoomId: string;
+      unreadCount: number;
+      updatedAt: Date;
+    }[],
+  ) {
+    const response: EventPayloadMap[EventMessage.UNREAD_COUNT_SUMMARY] = {
+      summary: unreadCountSummary,
+      totalUnreadCount: unreadCountSummary.reduce(
+        (acc, curr) => acc + curr.unreadCount,
+        0,
+      ),
+    };
+    this.emitSuccess(socket, EventMessage.UNREAD_COUNT_SUMMARY, response);
+  }
+
   /**
    * 성공 응답 이벤트 발송
    * @param socket - 소켓 인스턴스
@@ -316,5 +370,14 @@ export class EventEmitService {
     };
 
     socket.to(roomId).emit(event, response);
+  }
+
+  private emitToSocketId<T extends keyof EventPayloadMap>(
+    socket: Socket,
+    socketId: string,
+    event: T,
+    data: EventPayloadMap[T],
+  ) {
+    socket.to(socketId).emit(event, data);
   }
 }

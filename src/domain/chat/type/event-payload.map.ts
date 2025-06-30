@@ -75,4 +75,17 @@ export type EventPayloadMap = {
     code: EventErrorCode;
     message: string;
   };
+  [EventMessage.UNREAD_COUNT_UPDATED]: {
+    chatRoomId: string;
+    unreadCount: number;
+    updatedAt: Date;
+  };
+  [EventMessage.UNREAD_COUNT_SUMMARY]: {
+    summary: Array<{
+      chatRoomId: string;
+      unreadCount: number;
+      updatedAt: Date;
+    }>;
+    totalUnreadCount: number;
+  };
 };

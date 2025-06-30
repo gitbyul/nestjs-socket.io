@@ -43,6 +43,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly logUtil: LogUtil,
   ) {}
 
+  /**
+   * 소켓 연결 이벤트 처리
+   * @Event connection_established
+   * @listener connection_established 소켓 연결 성공
+   * @listener unread_count_summary 읽지 않은 메시지 수 요약
+   * @listener connection_failed 소켓 연결 실패
+   * @listener disconnected 소켓 연결 해제
+   */
   async handleConnection(socket: Socket) {
     try {
       this.logUtil.info(
@@ -55,6 +63,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.chatService.initializeUserConnection(user, socket);
       this.eventEmitService.connectionEstablished(socket, user.id);
 
+      // 읽지 않은 메시지 수 요약
+      const unreadCountSummary = await this.chatService.unreadCountSummary(
+        user.id,
+      );
+      this.eventEmitService.unreadCountSummary(
+        socket,
+        unreadCountSummary.filter((item) => item !== null) as {
+          chatRoomId: string;
+          unreadCount: number;
+          updatedAt: Date;
+        }[],
+      );
+
+      // 로그 출력
       this.logUtil.info(
         `[WebSocket][handleConnection][Success][${socket.id}][${user.id}][${user.role}]`,
       );
@@ -76,6 +98,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  /**
+   * 소켓 연결 해제 이벤트 처리
+   * @Event disconnected
+   * @listener disconnected 소켓 연결 해제
+   */
   async handleDisconnect(socket: Socket) {
     const userId = socket.data?.userId || 'unknown';
     const userRole = socket.data?.userRole || 'unknown';
@@ -143,9 +170,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * 메시지 전송
    * @Event send_message
-   * @listener send_message_success
-   * @listener send_message_failed
-   * @listener new_message
+   * @listener send_message_success 메시지 전송 성공
+   * @listener send_message_failed 메시지 전송 실패
+   * @listener new_message 새 메시지 수신
+   * @listener unread_count_updated 읽지 않은 메시지 수 업데이트
    */
   @SubscribeMessage(EventMessage.SEND_MESSAGE)
   @UseInterceptors(UserValidationInterceptor)
@@ -161,12 +189,37 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         `[WebSocket][sendMessage][Attempt][${socket.id}][${userId}][${userRole}][${body.chatRoomId}]`,
       );
 
-      const messageInfo = await this.chatService.sendTextMessage(
-        { userId, userRole },
-        body,
-      );
+      const {
+        chatRoomId,
+        messageId,
+        message,
+        type,
+        createdAt,
+        unreadCountMemberList,
+      } = await this.chatService.sendTextMessage({ userId, userRole }, body);
+      const messageInfo = {
+        chatRoomId,
+        messageId,
+        message,
+        type,
+        createdAt,
+      };
+
       this.eventEmitService.sendMessageSuccess(socket, messageInfo);
       this.eventEmitService.newMessage(socket, userInfo, messageInfo);
+      for (const unreadCountMember of unreadCountMemberList) {
+        const { socketId, unreadCount, createdAt } = unreadCountMember;
+
+        if (!socketId) {
+          continue;
+        }
+        this.eventEmitService.unreadCountUpdated(socket, socketId, {
+          chatRoomId,
+          unreadCount,
+          updatedAt: createdAt,
+        });
+      }
+
       this.logUtil.info(
         `[WebSocket][sendMessage][Success][${socket.id}][${userId}][${userRole}][${body.chatRoomId}][${messageInfo.messageId}]`,
       );
@@ -190,8 +243,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   /**
    * 메시지 읽음 처리
    * @Event read_message
-   * @listener read_message_success
-   * @listener read_message_failed
+   * @listener read_message_success 메시지 읽음 처리 성공
+   * @listener read_message_failed 메시지 읽음 처리 실패
    */
   @SubscribeMessage(EventMessage.READ_MESSAGE)
   @UseInterceptors(UserValidationInterceptor)
@@ -235,6 +288,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
     }
   }
+
+  // @SubscribeMessage(EventMessage.UNREAD_COUNT_SUMMARY)
+  // @UseInterceptors(UserValidationInterceptor)
+  // async getUnreadCountSummary(@ConnectedSocket() socket: Socket) {
+  //   const userId = socket.data.userId;
+  //   const unreadCountSummary = await this.chatService.getUnreadCountSummary(userId);
+  //   this.eventEmitService.unreadCountSummary(socket, unreadCountSummary);
+  // }
 
   private getUserInfo(socket: Socket) {
     return {

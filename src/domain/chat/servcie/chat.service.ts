@@ -61,7 +61,7 @@ export class ChatService {
     );
 
     // 채팅방 목록 조회
-    const activeChatRooms = await this.chatRoomService.getActiveChatRooms(
+    const activeChatRooms = await this.chatRoomService.getActiveChatRoomList(
       userPayload.id,
     );
 
@@ -170,12 +170,40 @@ export class ChatService {
   }
 
   /**
+   * 읽지 않은 메시지 수 요약
+   * @param user 사용자 정보
+   * @returns 읽지 않은 메시지 수 요약
+   */
+  async unreadCountSummary(userId: string) {
+    const chatRoomList = await this.chatRoomService.getChatRoomList(userId);
+
+    return await Promise.all(
+      chatRoomList.map(async (chatRoom) => {
+        const chatRoomMember =
+          await this.chatRoomMemberService.getChatRoomMember({
+            chatRoomId: chatRoom.id,
+            memberId: userId,
+          });
+        if (!chatRoomMember) {
+          return null;
+        }
+
+        return {
+          chatRoomId: chatRoom.id,
+          unreadCount: chatRoomMember.unreadMessageCount,
+          updatedAt: chatRoomMember.lastReadAt,
+        };
+      }),
+    );
+  }
+
+  /**
    * 채팅방 목록 조회
    * @param userId 사용자 ID
    * @returns 채팅방 목록
    */
   async getChatRooms(userId: string) {
-    const chatRooms = await this.chatRoomService.getChatRooms(userId);
+    const chatRooms = await this.chatRoomService.getChatRoomList(userId);
     chatRooms.forEach((chatRoom) => {
       const roomUsers = this.chatRoomUsers.get(chatRoom.id);
       if (!roomUsers) {
@@ -199,7 +227,7 @@ export class ChatService {
   async sendTextMessage(
     user: { userId: string; userRole: UserRole },
     body: SendMessageRequestDto,
-  ): Promise<EventPayloadMap[EventMessage.SEND_MESSAGE_SUCCESS]> {
+  ) {
     return this.dataSource.transaction(async (manager) => {
       try {
         // 1. 사용자 조회
@@ -259,18 +287,36 @@ export class ChatService {
           await this.chatRoomMemberService.getChatRoomMemberList(chatRoom.id);
 
         // 7. 채팅방 멤버 목록 순회
-        for (const chatRoomMember of chatRoomMemberList) {
-          if (chatRoomMember.memberId !== user.userId) {
-            // 8. 채팅방 멤버 읽지 않은 메시지 수 업데이트
-            await this.chatRoomMemberService.updateUnreadMessageCountWithTransaction(
-              manager,
-              {
-                chatRoomId: chatRoom.id,
-                memberId: chatRoomMember.memberId,
-              },
-            );
-          }
+        const unreadChatRoomMemberList = chatRoomMemberList.filter(
+          (chatRoomMember) => chatRoomMember.memberId !== user.userId,
+        );
+        for (const chatRoomMember of unreadChatRoomMemberList) {
+          // 8. 채팅방 멤버 읽지 않은 메시지 수 업데이트
+          await this.chatRoomMemberService.updateUnreadMessageCountWithTransaction(
+            manager,
+            {
+              chatRoomId: chatRoom.id,
+              memberId: chatRoomMember.memberId,
+            },
+          );
         }
+
+        // 9. 채팅 멤버, SocketId 데이터 병합
+        const unreadCountMemberList = unreadChatRoomMemberList.map(
+          (chatRoomMember) => {
+            const connectionInfo = this.getUserConnectionInfo(
+              chatRoomMember.memberId,
+            );
+            const socketId = connectionInfo?.socketId;
+            return {
+              chatRoomId: chatRoom.id,
+              socketId: socketId,
+              memberId: chatRoomMember.memberId,
+              unreadCount: chatRoomMember.unreadMessageCount,
+              createdAt: chatMessage.createdAt,
+            };
+          },
+        );
 
         return {
           chatRoomId: chatRoom.id,
@@ -278,6 +324,7 @@ export class ChatService {
           message: body.message,
           type: ChatMessageType.TEXT,
           createdAt: new Date(),
+          unreadCountMemberList,
         };
       } catch (error) {
         this.logUtil.error(

@@ -19,7 +19,7 @@ export class ChatRoomService {
    * @param userId 사용자 ID
    * @returns 채팅방 목록
    */
-  async getChatRooms(userId: string) {
+  async getChatRoomList(userId: string) {
     const chatRooms = await this.chatRoomsRepository.find({
       where: {
         chatRoomMembers: {
@@ -35,7 +35,7 @@ export class ChatRoomService {
    * @param userId 사용자 ID
    * @returns 활성 채팅방 목록
    */
-  async getActiveChatRooms(userId: string) {
+  async getActiveChatRoomList(userId: string) {
     const chatRooms = await this.chatRoomsRepository.find({
       where: {
         chatRoomMembers: { memberId: userId },

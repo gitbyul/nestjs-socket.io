@@ -30,4 +30,6 @@ export enum EventMessage {
   READ_MESSAGE = 'read_message', // 메시지 읽음 처리 [ 클라이언트 -> 서버 ]
   READ_MESSAGE_SUCCESS = 'read_message_success', // 메시지 읽음 처리 성공 [ 서버 -> 클라이언트 ]
   READ_MESSAGE_FAILED = 'read_message_failed', // 메시지 읽음 처리 실패 [ 서버 -> 클라이언트 ]
+  UNREAD_COUNT_UPDATED = 'unread_count_updated', // 읽지 않은 메시지 수 업데이트 [ 서버 -> 클라이언트 ]
+  UNREAD_COUNT_SUMMARY = 'unread_count_summary', // 읽지 않은 메시지 수 요약 (연결 시 전체 요약)[ 서버 -> 클라이언트 ]
 }
