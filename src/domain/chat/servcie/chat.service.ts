@@ -254,6 +254,24 @@ export class ChatService {
           },
         );
 
+        // 6. 채팅방 멤버 목록 조회
+        const chatRoomMemberList =
+          await this.chatRoomMemberService.getChatRoomMemberList(chatRoom.id);
+
+        // 7. 채팅방 멤버 목록 순회
+        for (const chatRoomMember of chatRoomMemberList) {
+          if (chatRoomMember.memberId !== user.userId) {
+            // 8. 채팅방 멤버 읽지 않은 메시지 수 업데이트
+            await this.chatRoomMemberService.updateUnreadMessageCountWithTransaction(
+              manager,
+              {
+                chatRoomId: chatRoom.id,
+                memberId: chatRoomMember.memberId,
+              },
+            );
+          }
+        }
+
         return {
           chatRoomId: chatRoom.id,
           messageId: chatMessage.id,
@@ -270,6 +288,13 @@ export class ChatService {
     });
   }
 
+  /**
+   * 메시지 읽음 처리
+   * @param user 사용자 정보
+   * @param chatRoomId 채팅방 ID
+   * @param messageId 메시지 ID
+   * @returns 메시지 읽음 처리 성공 정보
+   */
   async readMessage(
     user: { userId: string; userRole: UserRole },
     body: ReadMessageRequestDto,

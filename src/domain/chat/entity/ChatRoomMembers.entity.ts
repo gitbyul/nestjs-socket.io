@@ -11,6 +11,7 @@ import {
   IsDate,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsUUID,
 } from 'class-validator';
@@ -54,6 +55,16 @@ export class ChatRoomMembers extends ValidationEntity {
     comment: '채팅 참여자 ID',
   })
   memberId: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @Column({
+    name: 'unread_message_count',
+    type: 'int',
+    nullable: false,
+    comment: '채팅 참여자 읽지 않은 메시지 수',
+  })
+  unreadMessageCount: number;
 
   @IsUUID()
   @IsOptional()
