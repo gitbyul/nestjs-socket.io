@@ -7,6 +7,7 @@ import * as winstonDailyRotateFile from 'winston-daily-rotate-file';
 import { LogHttpInterceptor } from './log-http.interceptor';
 import { LogWebSocketInterceptor } from './log-ws.interceptor';
 import { LogUtil } from './log.util';
+import { LogFileInterceptor } from './log-file.interceptor';
 
 @Module({
   imports: [
@@ -43,7 +44,17 @@ import { LogUtil } from './log.util';
       ],
     }),
   ],
-  providers: [LogHttpInterceptor, LogWebSocketInterceptor, LogUtil],
-  exports: [LogUtil, LogHttpInterceptor, LogWebSocketInterceptor],
+  providers: [
+    LogUtil,
+    LogHttpInterceptor,
+    LogWebSocketInterceptor,
+    LogFileInterceptor,
+  ],
+  exports: [
+    LogUtil,
+    LogHttpInterceptor,
+    LogWebSocketInterceptor,
+    LogFileInterceptor,
+  ],
 })
 export class LogModule {}
