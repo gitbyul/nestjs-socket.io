@@ -1,15 +1,13 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Post,
+  Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { UploadService } from './service/upload.service';
-import { ResponseEntity } from 'src/config/entity/Response.entity';
-import { LogFileInterceptor } from 'src/config/log/log-file.interceptor';
-import { FileUploadRequestDto } from './request/file-upload.request';
 import {
   ApiBearerAuth,
   ApiConsumes,
@@ -17,21 +15,35 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { FileUploadResponseDto } from './response/file-upload.response';
+import { FileInterceptor } from '@nestjs/platform-express';
+
 import { ApiCommonResponse } from 'src/config/openapi/api-common-response.decorater';
-
-@Controller()
+import { LogFileInterceptor } from 'src/config/log/log-file.interceptor';
+import { HttpAuthGuard } from '../auth/guard/http-auth.guard';
+import { UploadService } from './service/upload.service';
+import { LogUtil } from 'src/config/log/log.util';
+import { ResponseEntity } from 'src/config/entity/Response.entity';
+import { FileUploadResponseDto } from './response/file-upload.response';
+import { FileUploadRequestDto } from './request/file-upload.request';
+import { AuthRequest } from '../auth/interface/auth-request.interface';
+@Controller('file')
+@UseGuards(HttpAuthGuard)
+@ApiBearerAuth()
 export class FileController {
-  constructor(private readonly uploadService: UploadService) {}
+  constructor(
+    private readonly logUtil: LogUtil,
+    private readonly uploadService: UploadService,
+  ) {}
 
-  @Post('upload')
+  @Post('chat/upload')
   @UseInterceptors(FileInterceptor('file'))
   @UseInterceptors(LogFileInterceptor)
   @ApiTags('File')
   @ApiConsumes('multipart/form-data')
-  @ApiBearerAuth()
   @ApiOperation({
-    summary: '파일 업로드',
+    summary: '채팅 파일 업로드',
+    description:
+      '파일 저장 이후 반환 받은 파일 아이디와 파일 접근 URL을 WebSocket으로 `chat-message-file-upload` 이벤트로 전송 필요',
   })
   @ApiCommonResponse({
     includeAuth: true,
@@ -44,12 +56,20 @@ export class FileController {
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: FileUploadRequestDto,
+    @Req() req: AuthRequest,
   ) {
-    const { Key, Location } = await this.uploadService.uploadFile(file, {
+    const user = req.user;
+    if (user.id !== body.senderId) {
+      throw new BadRequestException('Sender ID does not match');
+    }
+    const { fileId, url } = await this.uploadService.chatFileUploadFile(file, {
       id: body.senderId,
       type: body.senderType,
     });
 
-    return ResponseEntity.success(FileUploadResponseDto.of(Key, Location));
+    this.logUtil.info(
+      `[FileController] uploadFile - fileId: ${fileId}, url: ${url}`,
+    );
+    return ResponseEntity.success({ fileId, url });
   }
 }

@@ -1,4 +1,7 @@
-import { FileUploadSubType, FileUploadType } from '../enums/file-upload.enums';
+import {
+  FileUploadSubType,
+  FileUploadType,
+} from '../enums/file-upload-type.enums';
 
 export interface IGenerateS3KeyParams {
   fileUploadType: FileUploadType;

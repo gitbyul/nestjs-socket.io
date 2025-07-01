@@ -7,6 +7,7 @@ import { ChatMessages } from 'src/domain/chat/entity/ChatMessages.entity';
 import { ChatRoomMembers } from 'src/domain/chat/entity/ChatRoomMembers.entity';
 import { ChatRooms } from 'src/domain/chat/entity/ChatRooms.entity';
 import { ChatTemplates } from 'src/domain/chat/entity/ChatTemplates.entity';
+import { Files } from 'src/domain/file/entity/Files.entity';
 import { AdminUser } from 'src/domain/user/entity/AdminUser.entity';
 import { Advertisers } from 'src/domain/user/entity/Advertisers.entity';
 import { Author } from 'src/domain/user/entity/Author.entity';
@@ -34,6 +35,7 @@ import { Author } from 'src/domain/user/entity/Author.entity';
           Author,
           Advertisers,
           AdminUser,
+          Files,
         ],
       }),
     }),
