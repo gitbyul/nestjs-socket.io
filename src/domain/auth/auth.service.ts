@@ -21,7 +21,7 @@ export class AuthService {
   }
 
   /**
-   * 헤더 토큰 검증
+   * Http 요청 시 토큰 검증
    * @param request
    * @returns UserPayload
    */
@@ -48,6 +48,11 @@ export class AuthService {
     return payload;
   }
 
+  /**
+   * 헤더 토큰 추출
+   * @param request
+   * @returns string
+   */
   private extractHttpJwtToken(request: Request) {
     const authHeader = request.headers.authorization;
     if (!authHeader)
