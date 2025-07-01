@@ -16,7 +16,7 @@ import {
 } from './enums/chat-event-type.enum';
 import { LogUtil } from 'src/config/log/log.util';
 import { DtoValidationInterceptor } from './interceptor/dto-valdiation.interceptor';
-import { UserValidationInterceptor } from './interceptor/user-valdiation.interceptor';
+import { WebSocketUserValidationInterceptor } from '../auth/interceptor/ws-user-valdiation.interceptor';
 import { ValidateDto } from 'src/config/decorator/validate-dto.decorator';
 
 import { AuthService } from 'src/domain/auth/auth.service';
@@ -128,7 +128,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @listener heartbeat_failed
    */
   @SubscribeMessage(EventHeartBeat.HEARTBEAT)
-  @UseInterceptors(UserValidationInterceptor)
+  @UseInterceptors(WebSocketUserValidationInterceptor)
   heartbeat(@ConnectedSocket() socket: Socket) {
     try {
       const userId = socket.data.userId;
@@ -152,7 +152,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @return chatRooms: ChatRooms[]
    */
   @SubscribeMessage(EventChatRoom.GET_CHAT_ROOMS)
-  @UseInterceptors(UserValidationInterceptor)
+  @UseInterceptors(WebSocketUserValidationInterceptor)
   async getChatRooms(@ConnectedSocket() socket: Socket) {
     try {
       const userId = socket.data.userId;
@@ -178,7 +178,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @listener unread_count_updated 읽지 않은 메시지 수 업데이트
    */
   @SubscribeMessage(EventMessage.SEND_MESSAGE)
-  @UseInterceptors(UserValidationInterceptor)
+  @UseInterceptors(WebSocketUserValidationInterceptor)
   @ValidateDto(SendMessageRequestDto)
   async sendMessage(
     @ConnectedSocket() socket: Socket,
@@ -249,7 +249,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @listener read_message_failed 메시지 읽음 처리 실패
    */
   @SubscribeMessage(EventMessage.READ_MESSAGE)
-  @UseInterceptors(UserValidationInterceptor)
+  @UseInterceptors(WebSocketUserValidationInterceptor)
   @ValidateDto(ReadMessageRequestDto)
   async readMessage(
     @ConnectedSocket() socket: Socket,
@@ -292,7 +292,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   // @SubscribeMessage(EventMessage.UNREAD_COUNT_SUMMARY)
-  // @UseInterceptors(UserValidationInterceptor)
+  // @UseInterceptors(WebSocketUserValidationInterceptor)
   // async getUnreadCountSummary(@ConnectedSocket() socket: Socket) {
   //   const userId = socket.data.userId;
   //   const unreadCountSummary = await this.chatService.getUnreadCountSummary(userId);

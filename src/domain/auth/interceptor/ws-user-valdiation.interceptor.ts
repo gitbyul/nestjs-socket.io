@@ -5,15 +5,15 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { EMPTY, Observable } from 'rxjs';
-import { EventEmitService } from '../servcie/event-emit.service';
+import { EventEmitService } from '../../chat/servcie/event-emit.service';
 import { Socket } from 'socket.io';
-import { ChatService } from '../servcie/chat.service';
+import { ChatService } from '../../chat/servcie/chat.service';
 import { LogUtil } from 'src/config/log/log.util';
-import { EventMappingUtil } from '../util/event-mapping.util';
-import { HandlerEventMap } from '../type/handler-event.map';
+import { EventMappingUtil } from '../../chat/util/event-mapping.util';
+import { HandlerEventMap } from '../../chat/type/handler-event.map';
 
 @Injectable()
-export class UserValidationInterceptor implements NestInterceptor {
+export class WebSocketUserValidationInterceptor implements NestInterceptor {
   constructor(
     private readonly logUtil: LogUtil,
     private readonly chatService: ChatService,
