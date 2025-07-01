@@ -5,7 +5,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable, map } from 'rxjs';
-import { ResponseEntity } from '../entity/Reponse.entity';
+import { ResponseEntity } from '../entity/Response.entity';
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
@@ -45,6 +45,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
           statusCode: response.statusCode, // 자동으로 현재 응답 상태 코드 반영
           message: 'Success',
           body,
+          timestamp: new Date(),
         };
       }),
     );
