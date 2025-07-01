@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { AdvertiserService } from './advertiser.service';
 import { AdminService } from './admin.service';
 import { AuthorService } from './author.service';
@@ -22,7 +22,7 @@ export class UserService {
       case UserRole.ADMIN:
         return this.adminService.existsByEmail(id);
       default:
-        throw new NotFoundException('User not found');
+        throw new BadRequestException('Invalid user role');
     }
   }
 
@@ -35,7 +35,7 @@ export class UserService {
       case UserRole.ADMIN:
         return this.adminService.getAdminUserByEmail(id);
       default:
-        throw new NotFoundException('User not found');
+        throw new BadRequestException('Invalid user role');
     }
   }
   async getUserByIdWithTransaction(
@@ -57,7 +57,7 @@ export class UserService {
           id,
         );
       default:
-        throw new NotFoundException('User not found');
+        throw new BadRequestException('Invalid user role');
     }
   }
 }
