@@ -11,5 +11,5 @@ export class FileUploadResponseDto {
     description: '업로드된 파일의 URL',
     example: 'https://s3.amazonaws.com/bucket/uploads/2024/01/abc123.jpg',
   })
-  url: string;
+  fileUrl: string;
 }

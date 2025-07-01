@@ -57,19 +57,22 @@ export class FileController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: FileUploadRequestDto,
     @Req() req: AuthRequest,
-  ) {
+  ): Promise<ResponseEntity<FileUploadResponseDto>> {
     const user = req.user;
     if (user.id !== body.senderId) {
       throw new BadRequestException('Sender ID does not match');
     }
-    const { fileId, url } = await this.uploadService.chatFileUploadFile(file, {
-      id: body.senderId,
-      type: body.senderType,
-    });
+    const { fileId, fileUrl } = await this.uploadService.chatFileUploadFile(
+      file,
+      {
+        id: body.senderId,
+        type: body.senderType,
+      },
+    );
 
     this.logUtil.info(
-      `[FileController] uploadFile - fileId: ${fileId}, url: ${url}`,
+      `[FileController] uploadFile - fileId: ${fileId}, fileUrl: ${fileUrl}`,
     );
-    return ResponseEntity.success({ fileId, url });
+    return ResponseEntity.success({ fileId, fileUrl });
   }
 }

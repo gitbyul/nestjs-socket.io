@@ -6,6 +6,7 @@ import { Files } from '../entity/Files.entity';
 import { FileRelatedTable } from '../enums/file-releated-table.enums';
 import { FileCode } from '../enums/file-upload-code.enum';
 import { FileService } from './file.service';
+import { FileUploadResponseDto } from '../response/file-upload.response';
 
 @Injectable()
 export class UploadService {
@@ -15,10 +16,16 @@ export class UploadService {
     private readonly fileService: FileService,
   ) {}
 
+  /**
+   * 채팅 파일 업로드
+   * @param file 업로드 파일
+   * @param sender 업로드 유저 정보
+   * @returns 업로드 파일 정보
+   */
   async chatFileUploadFile(
     file: Express.Multer.File,
     sender: { id: string; type: UserRole },
-  ) {
+  ): Promise<FileUploadResponseDto> {
     // Sender 유저 조회
     const user = await this.userService.getUserById(sender.id, sender.type);
     if (!user) {
@@ -46,7 +53,7 @@ export class UploadService {
 
     return {
       fileId: savedFile.id,
-      url: savedFile.url,
+      fileUrl: savedFile.url,
     };
   }
 }
