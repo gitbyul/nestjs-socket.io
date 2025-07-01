@@ -1,25 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { ChatFileService } from './chat-file.service';
-import { UserService } from 'src/domain/user/service/user.service';
-import { UserRole } from 'src/domain/auth/enums/user-role.enum';
+import { Injectable } from '@nestjs/common';
+import { Files } from '../entity/Files.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class FileService {
-  constructor(
-    private readonly chatFileService: ChatFileService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly fileRepository: Repository<Files>) {}
 
-  async uploadFile(
-    file: Express.Multer.File,
-    sender: { id: string; type: UserRole },
-  ) {
-    const user = await this.userService.getUserById(sender.id, sender.type);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    return this.chatFileService.uploadFileToS3WithFileTypeChat(file, sender.id);
+  async save(file: Files) {
+    return await this.fileRepository.save(file);
   }
 }

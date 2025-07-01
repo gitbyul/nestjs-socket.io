@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
 import { FileController } from './file.controller';
 import { LogModule } from 'src/config/log/log.module';
-import { FileService } from './service/file.service';
-import { ChatFileService } from './service/chat-file.service';
+import { UploadService } from './service/upload.service';
+import { ChatS3Service } from './service/chat-s3.service';
 import { UserModule } from '../user/user.module';
+import { AuthModule } from '../auth/auth.module';
+import { FileService } from './service/file.service';
 
 @Module({
-  imports: [LogModule, UserModule],
-  providers: [FileService, ChatFileService],
+  imports: [LogModule, AuthModule, UserModule],
+  providers: [UploadService, ChatS3Service, FileService],
   controllers: [FileController],
   exports: [],
 })

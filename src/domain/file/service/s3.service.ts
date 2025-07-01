@@ -18,7 +18,7 @@ import {
   ICopyFileFromS3Params,
 } from '../interface/s3-upload.interface';
 
-export class S3FileService {
+export class S3Service {
   protected readonly s3Client: S3Client;
   protected readonly s3BucketName: string;
 
