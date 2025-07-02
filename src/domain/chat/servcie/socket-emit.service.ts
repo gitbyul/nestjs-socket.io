@@ -50,7 +50,7 @@ export class SocketEmitService {
    * @param socket - 소켓 인스턴스
    */
   disconnected(socket: Socket) {
-    socket.emit(EventConnection.DISCONNECTED, {});
+    this.emitSuccess(socket, EventConnection.DISCONNECTED, void 0);
   }
 
   /**
@@ -97,7 +97,6 @@ export class SocketEmitService {
     const response: EventPayloadMap[EventHeartBeat.HEARTBEAT_SUCCESS] = {
       userId: userId,
       socketId: socketId,
-      timestamp: new Date(),
     };
     this.emitSuccess(socket, EventHeartBeat.HEARTBEAT_SUCCESS, response);
   }
@@ -124,7 +123,6 @@ export class SocketEmitService {
   getChatRoomsSuccess(socket: Socket, chatRooms: ChatRooms[]) {
     const response: EventPayloadMap[EventChatRoom.GET_CHAT_ROOMS_SUCCESS] = {
       chatRooms: chatRooms,
-      timestamp: new Date(),
     };
     this.emitSuccess(socket, EventChatRoom.GET_CHAT_ROOMS_SUCCESS, response);
   }
@@ -320,7 +318,7 @@ export class SocketEmitService {
     unreadCountSummary: {
       chatRoomId: string;
       unreadCount: number;
-      updatedAt: Date;
+      updatedAt: Date | null;
     }[],
   ) {
     const response: EventPayloadMap[EventMessage.UNREAD_COUNT_SUMMARY] = {
@@ -331,6 +329,24 @@ export class SocketEmitService {
       ),
     };
     this.emitSuccess(socket, EventMessage.UNREAD_COUNT_SUMMARY, response);
+  }
+
+  /**
+   * 읽지 않은 메시지 수 요약 조회 실패 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param error - 에러
+   */
+  unreadCountSummaryFailed(
+    socket: Socket,
+    errorCode: EventErrorCode,
+    error: Error,
+  ) {
+    this.emitFailed(
+      socket,
+      EventMessage.UNREAD_COUNT_SUMMARY_FAILED,
+      errorCode,
+      error.message,
+    );
   }
 
   /**

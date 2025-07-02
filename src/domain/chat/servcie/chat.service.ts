@@ -189,15 +189,14 @@ export class ChatService {
    * @returns 읽지 않은 메시지 수 요약
    */
   async unreadCountSummary(userId: string) {
-    const chatRoomList = await this.chatRoomService.getChatRoomList(userId);
+    const chatRoomList =
+      await this.chatRoomService.getChatRoomListWithMember(userId);
 
-    return await Promise.all(
-      chatRoomList.map(async (chatRoom) => {
-        const chatRoomMember =
-          await this.chatRoomMemberService.getChatRoomMember({
-            chatRoomId: chatRoom.id,
-            memberId: userId,
-          });
+    const unreadCountSummary = chatRoomList
+      .map((chatRoom) => {
+        const chatRoomMember = chatRoom.chatRoomMembers.find(
+          (member) => member.memberId === userId,
+        );
         if (!chatRoomMember) {
           return null;
         }
@@ -207,8 +206,10 @@ export class ChatService {
           unreadCount: chatRoomMember.unreadMessageCount,
           updatedAt: chatRoomMember.lastReadAt,
         };
-      }),
-    );
+      })
+      .filter((item) => item !== null);
+
+    return unreadCountSummary;
   }
 
   /**

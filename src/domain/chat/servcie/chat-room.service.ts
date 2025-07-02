@@ -36,12 +36,20 @@ export class ChatRoomService {
    * @returns 채팅방 목록
    */
   async getChatRoomListWithMember(userId: string) {
-    const chatRooms = await this.chatRoomsRepository.find({
-      where: {
-        chatRoomMembers: { memberId: userId },
-      },
-      relations: ['chatRoomMembers'],
-    });
+    const chatRooms = await this.chatRoomsRepository
+      .createQueryBuilder('chatRoom')
+      .leftJoinAndSelect('chatRoom.chatRoomMembers', 'chatRoomMember')
+      .where((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('crm.id')
+          .from('chat_room_members', 'crm')
+          .where('crm.member_id = :userId', { userId })
+          .andWhere('crm.chat_room_id = chatRoom.id')
+          .getQuery();
+        return `EXISTS ${subQuery}`;
+      })
+      .getMany();
     return chatRooms;
   }
 

@@ -1,107 +1,52 @@
-import { UserRole } from 'src/domain/auth/enums/user-role.enum';
-import { ChatRooms } from '../entity/ChatRooms.entity';
-import { EventErrorCode } from '../enums/chat-error-code.enum';
 import {
   EventChatRoom,
   EventConnection,
   EventHeartBeat,
   EventMessage,
 } from '../enums/chat-event-type.enum';
-import { ChatMessageType } from '../enums/chat-message-type.enum';
-import { ConnectionStatus } from '../enums/connection-state.enum';
+import { ConnectionEstablishedResponseDto } from '../dto/response/connection-established.response';
+import { ConnectionFailedResponseDto } from '../dto/response/connection-failed.response';
+import { HeartbeatFailedResponseDto } from '../dto/response/heartbeat-failed.response';
+import { HeartbeatSuccessResponseDto } from '../dto/response/heartbeat-success.response';
+import { GetChatRoomsFailedResponseDto } from '../dto/response/get-chat-rooms-failed.response';
+import { GetChatRoomsSuccessResponseDto } from '../dto/response/get-chat-rooms-success.response';
+import { SendMessageRequestDto } from '../dto/request/send-message.request';
+import { SendMessageSuccessResponseDto } from '../dto/response/send-message-success.response';
+import { SendMessageFailedResponseDto } from '../dto/response/send-message-failed.response';
+import { NewMessageResponseDto } from '../dto/response/new-message.response';
+import { ReadMessageRequestDto } from '../dto/request/read-message.request';
+import { ReadMessageSuccessResponseDto } from '../dto/response/read-message-success.response';
+import { UnreadCountUpdatedResponseDto } from '../dto/response/unread-count-update.response';
+import { UnreadCountSummaryResponseDto } from '../dto/response/unread-count-summary.response';
+import { ReadMessageFailedResponseDto } from '../dto/response/read-message-failed.response';
+import { UnreadCountSummaryFailedResponseDto } from '../dto/response/unread-count-summary-failed.response';
 
 export type EventPayloadMap = {
   // 연결 관련
-  [EventConnection.CONNECTION_ESTABLISHED]: {
-    userId: string;
-    status: ConnectionStatus.CONNECTED;
-    timestamp: Date;
-  };
-  [EventConnection.CONNECTION_FAILED]: void;
+  [EventConnection.CONNECTION_ESTABLISHED]: ConnectionEstablishedResponseDto;
+  [EventConnection.CONNECTION_FAILED]: ConnectionFailedResponseDto;
   [EventConnection.DISCONNECTED]: void;
 
   // Heartbeat 관련
   [EventHeartBeat.HEARTBEAT]: void;
-  [EventHeartBeat.HEARTBEAT_SUCCESS]: {
-    userId: string;
-    socketId: string;
-    timestamp: Date;
-  };
-  [EventHeartBeat.HEARTBEAT_FAILED]: {
-    code: EventErrorCode;
-    message: string;
-    timestamp: Date;
-  };
+  [EventHeartBeat.HEARTBEAT_SUCCESS]: HeartbeatSuccessResponseDto;
+  [EventHeartBeat.HEARTBEAT_FAILED]: HeartbeatFailedResponseDto;
 
   // 채팅방 관련
   [EventChatRoom.GET_CHAT_ROOMS]: void;
-  [EventChatRoom.GET_CHAT_ROOMS_SUCCESS]: {
-    chatRooms: ChatRooms[];
-    timestamp: Date;
-  };
-  [EventChatRoom.GET_CHAT_ROOMS_FAILED]: void;
+  [EventChatRoom.GET_CHAT_ROOMS_SUCCESS]: GetChatRoomsSuccessResponseDto;
+  [EventChatRoom.GET_CHAT_ROOMS_FAILED]: GetChatRoomsFailedResponseDto;
 
   // 메시지 관련
-  [EventMessage.SEND_MESSAGE]: void;
-  [EventMessage.NEW_MESSAGE]: {
-    chatRoomId: string;
-    senderId: string;
-    senderType: UserRole;
-    message: { messageId: string; message?: string };
-    file?: {
-      fileId: string;
-      originalFilename: string;
-      mimetype: string;
-      size: number | null;
-      path: string;
-      url: string;
-      orderNumber?: number;
-    };
-    type: ChatMessageType;
-    createdAt: Date;
-  };
-  [EventMessage.SEND_MESSAGE_SUCCESS]: {
-    chatRoomId: string;
-    message: { messageId: string; message?: string };
-    file?: {
-      fileId: string;
-      originalFilename: string;
-      mimetype: string;
-      size: number | null;
-      path: string;
-      url: string;
-      orderNumber?: number;
-    };
-    type: ChatMessageType;
-    createdAt: Date;
-  };
-  [EventMessage.SEND_MESSAGE_FAILED]: {
-    code: EventErrorCode;
-    message: string;
-  };
-  [EventMessage.READ_MESSAGE]: void;
-  [EventMessage.READ_MESSAGE_SUCCESS]: {
-    chatRoomId: string;
-    messageId: string;
-    readerId: string;
-    readerType: UserRole;
-    createdAt: Date;
-  };
-  [EventMessage.READ_MESSAGE_FAILED]: {
-    code: EventErrorCode;
-    message: string;
-  };
-  [EventMessage.UNREAD_COUNT_UPDATED]: {
-    chatRoomId: string;
-    unreadCount: number;
-    updatedAt: Date;
-  };
-  [EventMessage.UNREAD_COUNT_SUMMARY]: {
-    summary: Array<{
-      chatRoomId: string;
-      unreadCount: number;
-      updatedAt: Date;
-    }>;
-    totalUnreadCount: number;
-  };
+  [EventMessage.SEND_MESSAGE]: SendMessageRequestDto;
+  [EventMessage.NEW_MESSAGE]: NewMessageResponseDto;
+  [EventMessage.SEND_MESSAGE_SUCCESS]: SendMessageSuccessResponseDto;
+  [EventMessage.SEND_MESSAGE_FAILED]: SendMessageFailedResponseDto;
+  [EventMessage.READ_MESSAGE]: ReadMessageRequestDto;
+  [EventMessage.READ_MESSAGE_SUCCESS]: ReadMessageSuccessResponseDto;
+  [EventMessage.READ_MESSAGE_FAILED]: ReadMessageFailedResponseDto;
+  [EventMessage.UNREAD_COUNT_UPDATED]: UnreadCountUpdatedResponseDto;
+  [EventMessage.GET_UNREAD_COUNT_SUMMARY]: void;
+  [EventMessage.UNREAD_COUNT_SUMMARY]: UnreadCountSummaryResponseDto;
+  [EventMessage.UNREAD_COUNT_SUMMARY_FAILED]: UnreadCountSummaryFailedResponseDto;
 };
