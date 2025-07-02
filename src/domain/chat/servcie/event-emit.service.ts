@@ -136,20 +136,28 @@ export class EventEmitService {
    */
   sendMessageSuccess(
     socket: Socket,
-    result: {
+    message: {
       chatRoomId: string;
-      messageId: string;
-      message: string;
+      message: { messageId: string; message?: string };
+      file?: {
+        fileId: string;
+        originalFilename: string;
+        mimetype: string;
+        size: number | null;
+        path: string;
+        url: string;
+        orderNumber?: number;
+      };
       type: ChatMessageType;
       createdAt: Date;
     },
   ) {
     const response: EventPayloadMap[EventMessage.SEND_MESSAGE_SUCCESS] = {
-      chatRoomId: result.chatRoomId,
-      messageId: result.messageId,
-      message: result.message,
-      type: result.type,
-      createdAt: result.createdAt,
+      chatRoomId: message.chatRoomId,
+      message: message.message,
+      file: message.file,
+      type: message.type,
+      createdAt: message.createdAt,
     };
 
     this.emitSuccess(socket, EventMessage.SEND_MESSAGE_SUCCESS, response);
@@ -184,8 +192,16 @@ export class EventEmitService {
     },
     message: {
       chatRoomId: string;
-      messageId: string;
-      message: string;
+      message: { messageId: string; message?: string };
+      file?: {
+        fileId: string;
+        originalFilename: string;
+        mimetype: string;
+        size: number | null;
+        path: string;
+        url: string;
+        orderNumber?: number;
+      };
       type: ChatMessageType;
       createdAt: Date;
     },
@@ -194,8 +210,8 @@ export class EventEmitService {
       senderId: sender.userId,
       senderType: sender.userRole,
       chatRoomId: message.chatRoomId,
-      messageId: message.messageId,
       message: message.message,
+      file: message.file,
       type: message.type,
       createdAt: message.createdAt,
     };
