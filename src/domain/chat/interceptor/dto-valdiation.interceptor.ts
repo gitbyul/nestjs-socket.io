@@ -11,14 +11,14 @@ import { Socket } from 'socket.io';
 import { VALIDATE_DTO_KEY } from 'src/config/decorator/validate-dto.decorator';
 import { HandlerEventMap } from '../type/handler-event.map';
 import { EventMappingUtil } from '../util/event-mapping.util';
-import { EventEmitService } from '../servcie/event-emit.service';
+import { SocketEmitService } from '../servcie/socket-emit.service';
 import { LogUtil } from 'src/config/log/log.util';
 
 @Injectable()
 export class DtoValidationInterceptor implements NestInterceptor {
   constructor(
     private readonly logUtil: LogUtil,
-    private readonly eventEmitService: EventEmitService,
+    private readonly socketEmitService: SocketEmitService,
   ) {}
   async intercept(
     context: ExecutionContext,
@@ -70,7 +70,11 @@ export class DtoValidationInterceptor implements NestInterceptor {
       `[DtoValidationInterceptor][${handlerName}][${eventName}] Validation failed for socket ${socket.id}`,
     );
 
-    this.eventEmitService.validationFailed(socket, eventName, validationErrors);
+    this.socketEmitService.validationFailed(
+      socket,
+      eventName,
+      validationErrors,
+    );
 
     return EMPTY;
   }

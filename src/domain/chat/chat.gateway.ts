@@ -21,7 +21,7 @@ import { ValidateDto } from 'src/config/decorator/validate-dto.decorator';
 
 import { AuthService } from 'src/domain/auth/auth.service';
 import { ChatService } from './servcie/chat.service';
-import { EventEmitService } from './servcie/event-emit.service';
+import { SocketEmitService } from './servcie/socket-emit.service';
 
 import { SendMessageRequestDto } from './dto/request/send-message.request';
 import { EventErrorCode } from './enums/chat-error-code.enum';
@@ -41,7 +41,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly authService: AuthService,
     private readonly chatService: ChatService,
-    private readonly eventEmitService: EventEmitService,
+    private readonly socketEmitService: SocketEmitService,
     private readonly logUtil: LogUtil,
   ) {}
 
@@ -63,13 +63,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const user = await this.authService.authenticateSocket(socket);
       // 유저 연결 초기화
       await this.chatService.initializeUserConnection(user, socket);
-      this.eventEmitService.connectionEstablished(socket, user.id);
+      this.socketEmitService.connectionEstablished(socket, user.id);
 
       // 읽지 않은 메시지 수 요약
       const unreadCountSummary = await this.chatService.unreadCountSummary(
         user.id,
       );
-      this.eventEmitService.unreadCountSummary(
+      this.socketEmitService.unreadCountSummary(
         socket,
         unreadCountSummary.filter((item) => item !== null) as {
           chatRoomId: string;
@@ -90,7 +90,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // 유저 연결 해제 사전 작업
       await this.chatService.disconnectUserWithDatabaseAndMemory(socket);
       // 연결 실패 이벤트 발송
-      this.eventEmitService.connectionFailed(
+      this.socketEmitService.connectionFailed(
         socket,
         EventErrorCode.AUTHENTICATION_FAILED,
         `[ChatGateway] handleConnection: ${error} ${socket.id}`,
@@ -116,7 +116,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // 유저 연결 해제 사전 작업
     await this.chatService.disconnectUserWithDatabaseAndMemory(socket);
     // 연결 해제 이벤트 발송
-    this.eventEmitService.disconnected(socket);
+    this.socketEmitService.disconnected(socket);
     // 유저 연결 해제
     socket.disconnect();
   }
@@ -133,7 +133,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const userId = socket.data.userId;
       this.chatService.updateUserLastActivity(userId);
-      this.eventEmitService.heartbeatSuccess(socket, socket.id, userId);
+      this.socketEmitService.heartbeatSuccess(socket, socket.id, userId);
       this.logUtil.debug(
         `[WebSocket][heartbeat][Success][${socket.id}][${userId}]`,
       );
@@ -141,7 +141,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logUtil.error(
         `[WebSocket][heartbeat][Failed][${socket.id}][${socket.data?.userId || 'unknown'}][${error.message}]`,
       );
-      this.eventEmitService.heartbeatFailed(socket, socket.id);
+      this.socketEmitService.heartbeatFailed(socket, socket.id);
     }
   }
 
@@ -160,7 +160,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const chatRooms =
         await this.chatService.getChatRoomListWithMember(userId);
 
-      this.eventEmitService.getChatRoomsSuccess(socket, chatRooms);
+      this.socketEmitService.getChatRoomsSuccess(socket, chatRooms);
       this.logUtil.WebSocketSuccess(
         `[${socket.id}][${userId}] ${chatRooms.length} rooms`,
       );
@@ -168,7 +168,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logUtil.WebSocketError(
         `[${socket.id}][${socket.data?.userId || 'unknown'}][${error.message}]`,
       );
-      this.eventEmitService.getChatRoomsFailed(
+      this.socketEmitService.getChatRoomsFailed(
         socket,
         EventErrorCode.INTERNAL_ERROR,
         error,
@@ -207,15 +207,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         createdAt,
       };
 
-      this.eventEmitService.sendMessageSuccess(socket, messageInfo);
-      this.eventEmitService.newMessage(socket, userInfo, messageInfo);
+      this.socketEmitService.sendMessageSuccess(socket, messageInfo);
+      this.socketEmitService.newMessage(socket, userInfo, messageInfo);
       for (const unreadCountMember of unreadCountMemberList) {
         const { socketId, unreadCount, createdAt } = unreadCountMember;
 
         if (!socketId) {
           continue;
         }
-        this.eventEmitService.unreadCountUpdated(socket, socketId, {
+        this.socketEmitService.unreadCountUpdated(socket, socketId, {
           chatRoomId,
           unreadCount,
           updatedAt: createdAt,
@@ -235,7 +235,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           errorCode = EventErrorCode.CHAT_ROOM_NOT_FOUND;
           break;
       }
-      this.eventEmitService.sendMessageFailed(socket, errorCode, error);
+      this.socketEmitService.sendMessageFailed(socket, errorCode, error);
       this.logUtil.error(
         `[WebSocket][sendMessage][Failed][${socket.id}][${socket.data?.userId || 'unknown'}][${socket.data?.userRole || 'unknown'}][${body?.chatRoomId || 'unknown'}][${errorCode}][${error.message}]`,
       );
@@ -260,7 +260,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const { userId, userRole } = userInfo;
 
       const result = await this.chatService.readMessage(userInfo, body);
-      this.eventEmitService.readMessageSuccess(socket, result);
+      this.socketEmitService.readMessageSuccess(socket, result);
       this.logUtil.info(
         `[WebSocket][readMessage][Success][${socket.id}][${userId}][${userRole}][${body.chatRoomId}][${body.messageId}]`,
       );
@@ -284,7 +284,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             EventErrorCode.CHAT_ROOM_MEMBER_READ_MESSAGE_ORDER_INVALID;
           break;
       }
-      this.eventEmitService.readMessageFailed(socket, errorCode, error);
+      this.socketEmitService.readMessageFailed(socket, errorCode, error);
       this.logUtil.error(
         `[WebSocket][readMessage][Failed][${socket.id}][${socket.data?.userId || 'unknown'}][${socket.data?.userRole || 'unknown'}][${body?.chatRoomId || 'unknown'}][${error.message}]`,
       );
@@ -296,7 +296,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // async getUnreadCountSummary(@ConnectedSocket() socket: Socket) {
   //   const userId = socket.data.userId;
   //   const unreadCountSummary = await this.chatService.getUnreadCountSummary(userId);
-  //   this.eventEmitService.unreadCountSummary(socket, unreadCountSummary);
+  //   this.socketEmitService.unreadCountSummary(socket, unreadCountSummary);
   // }
 
   private getUserInfo(socket: Socket) {

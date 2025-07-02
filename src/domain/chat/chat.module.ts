@@ -6,7 +6,7 @@ import { ChatRoomMemberService } from './servcie/chat-room-member.service';
 import { ChatMessageService } from './servcie/chat-message.service';
 import { ChatTemplateService } from './servcie/chat-templates.service';
 import { ChatService } from './servcie/chat.service';
-import { EventEmitService } from './servcie/event-emit.service';
+import { SocketEmitService } from './servcie/socket-emit.service';
 
 import { ChatGateway } from './chat.gateway';
 import { AuthModule } from '../auth/auth.module';
@@ -43,8 +43,8 @@ import { FileModule } from '../file/file.module';
     ChatMessageService,
     ChatTemplateService,
     ChatConnectionService,
-    EventEmitService,
+    SocketEmitService,
   ],
-  exports: [ChatService, ChatRoomMemberService, EventEmitService],
+  exports: [ChatService, ChatRoomMemberService, SocketEmitService],
 })
 export class ChatModule {}

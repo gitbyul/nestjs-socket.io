@@ -5,7 +5,7 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { EMPTY, Observable } from 'rxjs';
-import { EventEmitService } from '../../chat/servcie/event-emit.service';
+import { SocketEmitService } from '../../chat/servcie/socket-emit.service';
 import { Socket } from 'socket.io';
 import { ChatService } from '../../chat/servcie/chat.service';
 import { LogUtil } from 'src/config/log/log.util';
@@ -17,7 +17,7 @@ export class WebSocketUserValidationInterceptor implements NestInterceptor {
   constructor(
     private readonly logUtil: LogUtil,
     private readonly chatService: ChatService,
-    private readonly eventEmitService: EventEmitService,
+    private readonly socketEmitService: SocketEmitService,
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
@@ -50,7 +50,7 @@ export class WebSocketUserValidationInterceptor implements NestInterceptor {
       `[UserValidationInterceptor][${handlerName}][${eventName}] User not found for socket ${socket.id}`,
     );
 
-    this.eventEmitService.userValidationFailed(
+    this.socketEmitService.userValidationFailed(
       socket,
       eventName,
       `User not found for socket ${socket.id}`,

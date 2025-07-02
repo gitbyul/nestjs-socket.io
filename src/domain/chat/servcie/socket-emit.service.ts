@@ -15,7 +15,7 @@ import { IChatEventResponse } from '../interface/chat-event-response.interface';
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 
 @Injectable()
-export class EventEmitService {
+export class SocketEmitService {
   /**
    * 연결 성공 이벤트 발송
    * @param socket - 소켓 인스턴스
