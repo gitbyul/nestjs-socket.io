@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { DataSource } from 'typeorm';
 import { LogUtil } from 'src/config/log/log.util';
@@ -27,6 +27,8 @@ import { ChatMessageNotFoundException } from 'src/config/exception/chat-message-
 import { ChatRoomMemberNotFoundException } from 'src/config/exception/chat-room-member-not-found.exception';
 import { ChatRoomMemberReadMessageOrderInvalidException } from 'src/config/exception/chat-room-member-read-message-order-invalid.exception';
 import { ChatRoomMemberReadMessageSameIdException } from 'src/config/exception/chat-room-member-read-message-same-id.exception';
+import { FileService } from 'src/domain/file/service/file.service';
+import { FileNotFoundException } from 'src/config/exception/file-not-found.exception';
 
 @Injectable()
 export class ChatService {
@@ -47,6 +49,8 @@ export class ChatService {
     private readonly chatTemplateService: ChatTemplateService,
     private readonly chatConnectionService: ChatConnectionService,
     private readonly userService: UserService,
+    @Inject(forwardRef(() => FileService))
+    private readonly fileService: FileService,
   ) {}
 
   /**
@@ -144,6 +148,16 @@ export class ChatService {
   }
 
   /**
+   * 사용자 연결 소켓 조회 (메모리)
+   * @param userId 사용자 ID
+   * @returns 사용자 연결 소켓
+   */
+  getUserConnectionSocket(userId: string): Socket | undefined {
+    const connectionInfo = this.userConnections.get(userId);
+    return connectionInfo?.socket;
+  }
+
+  /**
    * 소켓ID로 사용자 ID 조회 (메모리)
    * @param socketId 소켓 ID
    * @returns 사용자 ID
@@ -202,16 +216,9 @@ export class ChatService {
    * @param userId 사용자 ID
    * @returns 채팅방 목록
    */
-  async getChatRooms(userId: string) {
-    const chatRooms = await this.chatRoomService.getChatRoomList(userId);
-    chatRooms.forEach((chatRoom) => {
-      const roomUsers = this.chatRoomUsers.get(chatRoom.id);
-      if (!roomUsers) {
-        this.chatRoomUsers.set(chatRoom.id, new Set([userId]));
-      } else {
-        roomUsers.add(userId);
-      }
-    });
+  async getChatRoomListWithMember(userId: string) {
+    const chatRooms =
+      await this.chatRoomService.getChatRoomListWithMember(userId);
     return chatRooms;
   }
 
@@ -239,7 +246,7 @@ export class ChatService {
           throw new UserNotFoundException(user.userId, user.userRole);
         }
 
-        // 2. chat_rooms(채팅방) 조회
+        // 2. 채팅방 조회
         const chatRoom = await this.chatRoomService.getChatRoomWithTransaction(
           manager,
           {
@@ -251,7 +258,20 @@ export class ChatService {
           throw new ChatRoomNotFoundException(body.chatRoomId, user.userId);
         }
 
-        // 3. 메시지 저장
+        // 3. 채팅방 멤버 조회
+        const chatRoomMember =
+          await this.chatRoomMemberService.getChatRoomMemberWithTransaction(
+            manager,
+            {
+              chatRoomId: chatRoom.id,
+              memberId: user.userId,
+            },
+          );
+        if (!chatRoomMember) {
+          throw new ChatRoomMemberNotFoundException(chatRoom.id, user.userId);
+        }
+
+        // 4. 메시지 저장
         const chatMessage = await this.chatMessageService.createWithTransaction(
           manager,
           {
@@ -264,7 +284,7 @@ export class ChatService {
           },
         );
 
-        // 4. chat_rooms 상태값 업데이트
+        // 5. 채팅방 마지막 메시지 업데이트
         await this.chatRoomService.updateLastMessageWithTransaction(manager, {
           chatRoomId: body.chatRoomId,
           message: body.message,
@@ -272,7 +292,7 @@ export class ChatService {
           senderId: user.userId,
         });
 
-        // 5. chat_room_members 상태값 업데이트
+        // 6. 채팅방 멤버 상태값 업데이트
         await this.chatRoomMemberService.updateLastReadMessageWithTransaction(
           manager,
           {
@@ -282,16 +302,16 @@ export class ChatService {
           },
         );
 
-        // 6. 채팅방 멤버 목록 조회
+        // 7. 채팅방 멤버 목록 조회
         const chatRoomMemberList =
           await this.chatRoomMemberService.getChatRoomMemberList(chatRoom.id);
 
-        // 7. 채팅방 멤버 목록 순회
+        // 8. 채팅방 멤버 목록 순회
         const unreadChatRoomMemberList = chatRoomMemberList.filter(
           (chatRoomMember) => chatRoomMember.memberId !== user.userId,
         );
         for (const chatRoomMember of unreadChatRoomMemberList) {
-          // 8. 채팅방 멤버 읽지 않은 메시지 수 업데이트
+          // 9. 채팅방 멤버 읽지 않은 메시지 수 업데이트
           await this.chatRoomMemberService.updateUnreadMessageCountWithTransaction(
             manager,
             {
@@ -301,7 +321,7 @@ export class ChatService {
           );
         }
 
-        // 9. 채팅 멤버, SocketId 데이터 병합
+        // 10. 채팅 멤버, SocketId 데이터 병합
         const unreadCountMemberList = unreadChatRoomMemberList.map(
           (chatRoomMember) => {
             const connectionInfo = this.getUserConnectionInfo(
@@ -312,7 +332,7 @@ export class ChatService {
               chatRoomId: chatRoom.id,
               socketId: socketId,
               memberId: chatRoomMember.memberId,
-              unreadCount: chatRoomMember.unreadMessageCount,
+              unreadCount: chatRoomMember.unreadMessageCount + 1,
               createdAt: chatMessage.createdAt,
             };
           },
@@ -320,8 +340,10 @@ export class ChatService {
 
         return {
           chatRoomId: chatRoom.id,
-          messageId: chatMessage.id,
-          message: body.message,
+          message: {
+            messageId: chatMessage.id,
+            message: body.message,
+          },
           type: ChatMessageType.TEXT,
           createdAt: new Date(),
           unreadCountMemberList,
@@ -462,6 +484,165 @@ export class ChatService {
   }
 
   /**
+   * 파일 메시지 전송
+   * @param user 사용자 정보
+   * @param chatRoomId 채팅방 ID
+   * @param fileId 파일 ID
+   * @returns 파일 메시지 전송 성공 정보
+   */
+  sendFileMessage(
+    user: { userId: string; userRole: UserRole },
+    body: {
+      chatRoomId: string;
+      fileId: string;
+    },
+  ) {
+    return this.dataSource.transaction(async (manager) => {
+      try {
+        // 1. 사용자 조회
+        const userExists = await this.userService.existsById(
+          user.userId,
+          user.userRole,
+        );
+        if (!userExists) {
+          throw new UserNotFoundException(user.userId, user.userRole);
+        }
+
+        // 2. 채팅방 조회
+        const chatRoom = await this.chatRoomService.getChatRoomWithTransaction(
+          manager,
+          {
+            chatRoomId: body.chatRoomId,
+            userId: user.userId,
+          },
+        );
+        if (!chatRoom) {
+          throw new ChatRoomNotFoundException(body.chatRoomId, user.userId);
+        }
+
+        // 3. 채팅방 멤버 조회
+        const chatRoomMember =
+          await this.chatRoomMemberService.getChatRoomMemberWithTransaction(
+            manager,
+            {
+              chatRoomId: chatRoom.id,
+              memberId: user.userId,
+            },
+          );
+        if (!chatRoomMember) {
+          throw new ChatRoomMemberNotFoundException(chatRoom.id, user.userId);
+        }
+
+        // 4. 파일 조회
+        const fileEntity = await this.fileService.getFileWithTransaction(
+          manager,
+          {
+            fileId: body.fileId,
+          },
+        );
+        if (!fileEntity) {
+          throw new FileNotFoundException(body.fileId);
+        }
+
+        // 5. 파일 메시지 저장
+        const chatMessage = await this.chatMessageService.createWithTransaction(
+          manager,
+          {
+            chatRoomId: body.chatRoomId,
+            type: ChatMessageType.FILE,
+            senderType: user.userRole,
+            senderId: user.userId,
+          },
+        );
+
+        // 6. 파일 RelatedId 업데이트
+        await this.fileService.updateFileWithTransaction(manager, {
+          fileId: body.fileId,
+          relatedId: chatMessage.id,
+        });
+
+        // 7. 채팅방 마지막 메시지 업데이트
+        await this.chatRoomService.updateLastMessageWithTransaction(manager, {
+          chatRoomId: body.chatRoomId,
+          message: fileEntity.originalFilename,
+          senderType: user.userRole,
+          senderId: user.userId,
+        });
+
+        // 8. 채팅방 멤버 상태값 업데이트
+        await this.chatRoomMemberService.updateLastReadMessageWithTransaction(
+          manager,
+          {
+            chatRoomId: chatRoom.id,
+            memberId: user.userId,
+            lastReadMessageId: chatMessage.id,
+          },
+        );
+
+        // 9. 채팅방 멤버 목록 조회
+        const chatRoomMemberList =
+          await this.chatRoomMemberService.getChatRoomMemberList(chatRoom.id);
+
+        // 10. 채팅방 멤버 목록 순회
+        const unreadChatRoomMemberList = chatRoomMemberList.filter(
+          (chatRoomMember) => chatRoomMember.memberId !== user.userId,
+        );
+        for (const chatRoomMember of unreadChatRoomMemberList) {
+          // 11. 채팅방 멤버 읽지 않은 메시지 수 업데이트
+          await this.chatRoomMemberService.updateUnreadMessageCountWithTransaction(
+            manager,
+            {
+              chatRoomId: chatRoom.id,
+              memberId: chatRoomMember.memberId,
+            },
+          );
+        }
+
+        // 11. 채팅 멤버, SocketId 데이터 병합
+        const unreadCountMemberList = unreadChatRoomMemberList.map(
+          (chatRoomMember) => {
+            const connectionInfo = this.getUserConnectionInfo(
+              chatRoomMember.memberId,
+            );
+            const socketId = connectionInfo?.socketId;
+            return {
+              chatRoomId: chatRoom.id,
+              socketId: socketId,
+              memberId: chatRoomMember.memberId,
+              unreadCount: chatRoomMember.unreadMessageCount + 1,
+              createdAt: chatMessage.createdAt,
+            };
+          },
+        );
+
+        return {
+          chatRoomId: chatRoom.id,
+          message: {
+            messageId: chatMessage.id,
+          },
+          file: {
+            fileId: body.fileId,
+            originalFilename: fileEntity.originalFilename,
+            mimetype: fileEntity.mimetype,
+            size: fileEntity.size,
+            path: fileEntity.path,
+            url: fileEntity.url,
+            orderNumber: fileEntity.orderNumber ?? undefined,
+          },
+          type: ChatMessageType.FILE,
+          createdAt: new Date(),
+          unreadCountMemberList,
+        };
+      } catch (error) {
+        this.logUtil.error(
+          `[ChatService][sendFileMessage] sendFileMessage failed: ${error}`,
+        );
+        throw error;
+      }
+    });
+  }
+
+  /**
    * 사용자 연결 정보 생성
    * @param userPayload 사용자 정보
    * @param socket 소켓 정보
@@ -471,6 +652,7 @@ export class ChatService {
     const userConnectionInfo: IMemoryUserConnectionInfo = {
       userId: userPayload.id,
       socketId: socket.id,
+      socket: socket,
       userRole: userPayload.role,
       connectedAt: new Date(),
       lastActivityAt: new Date(),

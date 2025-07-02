@@ -130,6 +130,21 @@ export class EventEmitService {
   }
 
   /**
+   * 채팅방 목록 조회 실패 이벤트 발송
+   * @param socket - 소켓 인스턴스
+   * @param errorCode - 에러 코드
+   * @param error - 에러
+   */
+  getChatRoomsFailed(socket: Socket, errorCode: EventErrorCode, error: Error) {
+    this.emitFailed(
+      socket,
+      EventChatRoom.GET_CHAT_ROOMS_FAILED,
+      errorCode,
+      error.message,
+    );
+  }
+
+  /**
    * 메시지 전송 성공 이벤트 발송
    * @param socket - 소켓 인스턴스
    * @param result - 메시지 전송 결과

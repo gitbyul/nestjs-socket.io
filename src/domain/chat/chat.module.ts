@@ -19,6 +19,7 @@ import { ChatRoomMembers } from './entity/ChatRoomMembers.entity';
 import { ChatTemplates } from './entity/ChatTemplates.entity';
 import { ChatConnectedUsers } from './entity/ChatConnectedUsers.entity';
 import { ChatConnectionService } from './servcie/chat-connection.service';
+import { FileModule } from '../file/file.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ChatConnectionService } from './servcie/chat-connection.service';
       ChatConnectedUsers,
     ]),
     UserModule,
+    FileModule,
   ],
   providers: [
     ChatGateway,
@@ -43,5 +45,6 @@ import { ChatConnectionService } from './servcie/chat-connection.service';
     ChatConnectionService,
     EventEmitService,
   ],
+  exports: [ChatService, ChatRoomMemberService, EventEmitService],
 })
 export class ChatModule {}

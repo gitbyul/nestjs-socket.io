@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   JoinColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
 import {
   IsDate,
@@ -16,6 +17,7 @@ import {
   IsUUID,
   MaxLength,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
@@ -23,6 +25,7 @@ import { ChatMessageType } from 'src/domain/chat/enums/chat-message-type.enum';
 
 import { ValidationEntity } from 'src/config/entity/Validation.entity';
 import { ChatRooms } from './ChatRooms.entity';
+import { Files } from 'src/domain/file/entity/Files.entity';
 
 @Entity({ name: 'chat_messages' })
 export class ChatMessages extends ValidationEntity {
@@ -61,6 +64,7 @@ export class ChatMessages extends ValidationEntity {
   @IsString()
   @MinLength(1)
   @MaxLength(1000)
+  @ValidateIf((o) => o.type === ChatMessageType.TEXT)
   @IsNotEmpty()
   @Column({ name: 'message', type: 'text', nullable: true, comment: '메시지' })
   message: string | null;
@@ -106,10 +110,13 @@ export class ChatMessages extends ValidationEntity {
   })
   updatedAt: Date;
 
+  @OneToMany(() => Files, (file) => file.chatMessage)
+  files: Files[];
+
   static newMessage(params: {
     chatRoomId: string;
     templateId?: string;
-    message: string;
+    message?: string;
     type: ChatMessageType;
     senderType: UserRole;
     senderId: string;
@@ -117,7 +124,7 @@ export class ChatMessages extends ValidationEntity {
     const entity = new ChatMessages();
     entity.chatRoom = { id: params.chatRoomId } as ChatRooms;
     entity.templateId = params.templateId ?? null;
-    entity.message = params.message;
+    entity.message = params.message ?? null;
     entity.type = params.type;
     entity.senderType = params.senderType;
     entity.senderId = params.senderId;

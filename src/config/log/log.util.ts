@@ -22,29 +22,33 @@ export class LogUtil {
   }
 
   // TODO: 해당 로그로 모두 변경 필요
-  WebSocketInfo(text: string) {
+  WebSocketSuccess(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
-    this.logger.info(`[WebSocket][${className}][${handlerName}] ${text}`);
+    this.logger.info(
+      `[WebSocket][${className}][${handlerName}][Success]${text}`,
+    );
   }
   WebSocketError(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
-    this.logger.error(`[WebSocket][${className}][${handlerName}] ${text}`);
+    this.logger.error(
+      `[WebSocket][${className}][${handlerName}][Failed]${text}`,
+    );
   }
   HttpInfo(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
-    this.logger.info(`[HTTP][${className}][${handlerName}] ${text}`);
+    this.logger.info(`[HTTP][${className}][${handlerName}]${text}`);
   }
   HttpError(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
-    this.logger.error(`[HTTP][${className}][${handlerName}] ${text}`);
+    this.logger.error(`[HTTP][${className}][${handlerName}]${text}`);
   }
   EventInfo(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
-    this.logger.info(`[Event][${className}][${handlerName}] ${text}`);
+    this.logger.info(`[Event][${className}][${handlerName}]${text}`);
   }
   EventError(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
-    this.logger.error(`[Event][${className}][${handlerName}] ${text}`);
+    this.logger.error(`[Event][${className}][${handlerName}]${text}`);
   }
 
   // 색상 코드가 제거된 로그 메서드들

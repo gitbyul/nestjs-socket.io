@@ -28,7 +28,7 @@ export class ChatMessageService {
     messageData: {
       chatRoomId: string;
       templateId?: string;
-      message: string;
+      message?: string;
       type: ChatMessageType;
       senderType: UserRole;
       senderId: string;
@@ -37,7 +37,7 @@ export class ChatMessageService {
     const entity = ChatMessages.newMessage({
       chatRoomId: messageData.chatRoomId,
       templateId: messageData.templateId ?? undefined,
-      message: messageData.message,
+      message: messageData.message ?? undefined,
       type: messageData.type,
       senderType: messageData.senderType,
       senderId: messageData.senderId,

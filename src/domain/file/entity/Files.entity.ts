@@ -3,8 +3,13 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { FileRelatedTable } from '../enums/file-releated-table.enums';
+import { FileCode } from '../enums/file-upload-code.enum';
 
+import { ChatMessages } from 'src/domain/chat/entity/ChatMessages.entity';
 @Entity('files')
 export class Files {
   @PrimaryGeneratedColumn('uuid')
@@ -114,6 +119,13 @@ export class Files {
   })
   deletedAt: Date | null;
 
+  @ManyToOne(() => ChatMessages, (chatMessage) => chatMessage.files, {
+    eager: false,
+    nullable: true,
+  })
+  @JoinColumn([{ name: 'related_id', referencedColumnName: 'id' }])
+  chatMessage: ChatMessages | null;
+
   /**
    * S3에 파일이 저장된 후, 해당 정보를 기반으로 Files 엔티티 인스턴스를 생성합니다.
    * @param params S3 업로드 후 반환된 정보 및 연관 데이터
@@ -141,6 +153,30 @@ export class Files {
     file.orderNumber = params.orderNumber ?? null;
     file.isDeleted = false;
 
+    return file;
+  }
+
+  static newChatMessageFile(params: {
+    originalFilename: string;
+    mimetype: string;
+    size: number | null;
+    path: string;
+    url: string;
+    chatMessageId?: string | null;
+    orderNumber?: number | null;
+  }): Files {
+    const file = new Files();
+    file.originalFilename = params.originalFilename;
+    file.mimetype = params.mimetype;
+    file.size = params.size ?? null;
+    file.path = params.path;
+    file.url = params.url;
+    file.relatedTable = FileRelatedTable.CHAT;
+    file.relatedCode = FileCode.CHAT_FILE;
+    file.relatedId = params.chatMessageId ?? null;
+    file.orderNumber = params.orderNumber ?? null;
+    file.createdAt = new Date();
+    file.isDeleted = false;
     return file;
   }
 

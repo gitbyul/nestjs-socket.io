@@ -149,6 +149,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * 채팅방 목록 조회
    * @Event get_chat_rooms
    * @listener get_chat_rooms_success
+   * @listener get_chat_rooms_failed
    * @return chatRooms: ChatRooms[]
    */
   @SubscribeMessage(EventChatRoom.GET_CHAT_ROOMS)
@@ -156,15 +157,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async getChatRooms(@ConnectedSocket() socket: Socket) {
     try {
       const userId = socket.data.userId;
-      const chatRooms = await this.chatService.getChatRooms(userId);
+      const chatRooms =
+        await this.chatService.getChatRoomListWithMember(userId);
 
       this.eventEmitService.getChatRoomsSuccess(socket, chatRooms);
-      this.logUtil.info(
-        `[WebSocket][getChatRooms][Success][${socket.id}][${userId}][${chatRooms.length} rooms]`,
+      this.logUtil.WebSocketSuccess(
+        `[${socket.id}][${userId}] ${chatRooms.length} rooms`,
       );
     } catch (error) {
-      this.logUtil.error(
-        `[WebSocket][getChatRooms][Failed][${socket.id}][${socket.data?.userId || 'unknown'}][${error.message}]`,
+      this.logUtil.WebSocketError(
+        `[${socket.id}][${socket.data?.userId || 'unknown'}][${error.message}]`,
+      );
+      this.eventEmitService.getChatRoomsFailed(
+        socket,
+        EventErrorCode.INTERNAL_ERROR,
+        error,
       );
     }
   }
@@ -191,17 +198,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         `[WebSocket][sendMessage][Attempt][${socket.id}][${userId}][${userRole}][${body.chatRoomId}]`,
       );
 
-      const {
-        chatRoomId,
-        messageId,
-        message,
-        type,
-        createdAt,
-        unreadCountMemberList,
-      } = await this.chatService.sendTextMessage({ userId, userRole }, body);
+      const { chatRoomId, message, type, createdAt, unreadCountMemberList } =
+        await this.chatService.sendTextMessage({ userId, userRole }, body);
       const messageInfo = {
         chatRoomId,
-        messageId,
         message,
         type,
         createdAt,
@@ -223,7 +223,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       this.logUtil.info(
-        `[WebSocket][sendMessage][Success][${socket.id}][${userId}][${userRole}][${body.chatRoomId}][${messageInfo.messageId}]`,
+        `[WebSocket][sendMessage][Success][${socket.id}][${userId}][${userRole}][${body.chatRoomId}][${messageInfo.message.messageId}]`,
       );
     } catch (error) {
       let errorCode = EventErrorCode.INTERNAL_ERROR;

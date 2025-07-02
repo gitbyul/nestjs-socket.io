@@ -47,15 +47,31 @@ export type EventPayloadMap = {
     chatRoomId: string;
     senderId: string;
     senderType: UserRole;
-    messageId: string;
-    message: string;
+    message: { messageId: string; message?: string };
+    file?: {
+      fileId: string;
+      originalFilename: string;
+      mimetype: string;
+      size: number | null;
+      path: string;
+      url: string;
+      orderNumber?: number;
+    };
     type: ChatMessageType;
     createdAt: Date;
   };
   [EventMessage.SEND_MESSAGE_SUCCESS]: {
     chatRoomId: string;
-    messageId: string;
-    message: string;
+    message: { messageId: string; message?: string };
+    file?: {
+      fileId: string;
+      originalFilename: string;
+      mimetype: string;
+      size: number | null;
+      path: string;
+      url: string;
+      orderNumber?: number;
+    };
     type: ChatMessageType;
     createdAt: Date;
   };

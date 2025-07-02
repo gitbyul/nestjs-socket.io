@@ -16,12 +16,12 @@ export class ChatS3Service extends S3Service {
    */
   async uploadFileToS3WithFileTypeChat(
     fileStream: Express.Multer.File,
-    senderId: string,
+    chatRoomId: string,
   ) {
     return await this.uploadS3ToFileStream({
       fileStream,
       fileUploadType: FileUploadType.CHAT,
-      entityId: senderId,
+      entityId: chatRoomId,
     });
   }
 }

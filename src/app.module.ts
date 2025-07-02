@@ -11,15 +11,22 @@ import { ChatModule } from './domain/chat/chat.module';
 import { FileModule } from './domain/file/file.module';
 import { ResponseInterceptor } from './config/interceptor/response.intercepetor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EventModule } from './domain/event/event.module';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot({
+      wildcard: true,
+      delimiter: '.',
+    }),
     EnvValidationModule,
     MySqlModule,
     LogModule,
     AuthModule,
     ChatModule,
     FileModule,
+    EventModule,
   ],
   controllers: [AppController],
   providers: [
