@@ -20,6 +20,7 @@ import { ChatTemplates } from './entity/ChatTemplates.entity';
 import { ChatConnectedUsers } from './entity/ChatConnectedUsers.entity';
 import { ChatConnectionService } from './servcie/chat-connection.service';
 import { FileModule } from '../file/file.module';
+import { ChatController } from './chat.controller';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { FileModule } from '../file/file.module';
     ChatConnectionService,
     SocketEmitService,
   ],
+  controllers: [ChatController],
   exports: [ChatService, ChatRoomMemberService, SocketEmitService],
 })
 export class ChatModule {}

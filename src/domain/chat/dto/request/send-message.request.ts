@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsNotEmpty,
   IsOptional,
@@ -10,12 +11,20 @@ import {
 export class SendMessageRequestDto {
   @IsUUID(4)
   @IsNotEmpty({ message: '채팅방 ID는 필수 입력 항목입니다.' })
+  @ApiProperty({
+    description: '채팅방 ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   chatRoomId: string;
 
   @IsString()
   @IsNotEmpty({ message: '메시지는 필수 입력 항목입니다.' })
   @MinLength(1, { message: '메시지는 1자 이상이어야 합니다.' })
   @MaxLength(1000, { message: '메시지는 1000자 이하여야 합니다.' })
+  @ApiProperty({
+    description: '메시지',
+    example: 'Hello, world!',
+  })
   message: string;
 
   @IsUUID(4)
