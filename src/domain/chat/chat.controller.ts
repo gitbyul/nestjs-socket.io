@@ -28,7 +28,7 @@ export class ChatController {
     Websocket 서버 연결시 자동 호출 이벤트
     [성공 처리]
     - @websocketListener connection_established 소켓 연결 성공
-    - @websocketListener unread_count_summary 읽지 않은 메시지 수 요약
+    - @websocketListener unread_count_summary_success 읽지 않은 메시지 수 요약
     [실패 처리]
     - @websocketListener connection_failed 소켓 연결 실패
     `,
@@ -40,7 +40,8 @@ export class ChatController {
   })
   @ApiResponse({
     status: 201,
-    description: 'unread_count_summary (읽지 않은 메시지 수 요약) 이벤트 발송',
+    description:
+      'unread_count_summary_success (읽지 않은 메시지 수 요약) 이벤트 발송',
     type: UnreadCountSummaryResponseDto,
   })
   @ApiResponse({
@@ -207,7 +208,7 @@ export class ChatController {
     });
   }
 
-  @Get('/get_unread_count_summary')
+  @Get('/unread_count_summary')
   @ApiOperation({
     summary: '읽지 않은 메시지 수 요약 조회',
     description: `
@@ -218,7 +219,8 @@ export class ChatController {
   })
   @ApiResponse({
     status: 200,
-    description: 'unread_count_summary (읽지 않은 메시지 수 요약) 이벤트 발송',
+    description:
+      'unread_count_summary_success (읽지 않은 메시지 수 요약) 이벤트 발송',
     type: UnreadCountSummaryResponseDto,
   })
   @ApiResponse({

@@ -69,7 +69,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const unreadCountSummary = await this.chatService.unreadCountSummary(
         user.id,
       );
-      this.socketEmitService.unreadCountSummary(socket, unreadCountSummary);
+      this.socketEmitService.unreadCountSummarySuccess(
+        socket,
+        unreadCountSummary,
+      );
 
       // 로그 출력
       this.logUtil.info(
@@ -289,14 +292,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @Event get_unread_count_summary
    * @listener unread_count_summary 읽지 않은 메시지 수 요약
    */
-  @SubscribeMessage(EventMessage.GET_UNREAD_COUNT_SUMMARY)
+  @SubscribeMessage(EventMessage.UNREAD_COUNT_SUMMARY)
   @UseInterceptors(WebSocketUserValidationInterceptor)
   async getUnreadCountSummary(@ConnectedSocket() socket: Socket) {
     try {
       const userId = socket.data.userId;
       const unreadCountSummary =
         await this.chatService.unreadCountSummary(userId);
-      this.socketEmitService.unreadCountSummary(socket, unreadCountSummary);
+      this.socketEmitService.unreadCountSummarySuccess(
+        socket,
+        unreadCountSummary,
+      );
     } catch (error) {
       let errorCode = EventErrorCode.INTERNAL_ERROR;
       switch (error.constructor) {

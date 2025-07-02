@@ -313,7 +313,7 @@ export class SocketEmitService {
    * @param socket - 소켓 인스턴스
    * @param unreadCountSummary - 읽지 않은 메시지 수 요약
    */
-  unreadCountSummary(
+  unreadCountSummarySuccess(
     socket: Socket,
     unreadCountSummary: {
       chatRoomId: string;
@@ -321,14 +321,19 @@ export class SocketEmitService {
       updatedAt: Date | null;
     }[],
   ) {
-    const response: EventPayloadMap[EventMessage.UNREAD_COUNT_SUMMARY] = {
-      summary: unreadCountSummary,
-      totalUnreadCount: unreadCountSummary.reduce(
-        (acc, curr) => acc + curr.unreadCount,
-        0,
-      ),
-    };
-    this.emitSuccess(socket, EventMessage.UNREAD_COUNT_SUMMARY, response);
+    const response: EventPayloadMap[EventMessage.UNREAD_COUNT_SUMMARY_SUCCESS] =
+      {
+        summary: unreadCountSummary,
+        totalUnreadCount: unreadCountSummary.reduce(
+          (acc, curr) => acc + curr.unreadCount,
+          0,
+        ),
+      };
+    this.emitSuccess(
+      socket,
+      EventMessage.UNREAD_COUNT_SUMMARY_SUCCESS,
+      response,
+    );
   }
 
   /**

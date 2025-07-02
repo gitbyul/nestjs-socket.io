@@ -46,7 +46,7 @@ export type EventPayloadMap = {
   [EventMessage.READ_MESSAGE_SUCCESS]: ReadMessageSuccessResponseDto;
   [EventMessage.READ_MESSAGE_FAILED]: ReadMessageFailedResponseDto;
   [EventMessage.UNREAD_COUNT_UPDATED]: UnreadCountUpdatedResponseDto;
-  [EventMessage.GET_UNREAD_COUNT_SUMMARY]: void;
-  [EventMessage.UNREAD_COUNT_SUMMARY]: UnreadCountSummaryResponseDto;
+  [EventMessage.UNREAD_COUNT_SUMMARY]: void;
+  [EventMessage.UNREAD_COUNT_SUMMARY_SUCCESS]: UnreadCountSummaryResponseDto;
   [EventMessage.UNREAD_COUNT_SUMMARY_FAILED]: UnreadCountSummaryFailedResponseDto;
 };
