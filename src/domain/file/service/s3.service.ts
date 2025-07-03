@@ -36,7 +36,7 @@ export class S3Service {
     }
 
     this.s3Client = new S3Client(s3ClientParams);
-    this.s3BucketName = process.env.S3_BUCKET_NAME!;
+    this.s3BucketName = process.env.AWS_S3_BUCKET_NAME!;
   }
 
   /**
@@ -88,7 +88,7 @@ export class S3Service {
   protected async downloadS3ToFileStream({ s3Key }: { s3Key: string }) {
     try {
       const getParams = {
-        Bucket: process.env.S3_BUCKET_NAME,
+        Bucket: this.s3BucketName,
         Key: s3Key,
       };
       return await this.s3Client.send(new GetObjectCommand(getParams));
@@ -123,7 +123,7 @@ export class S3Service {
     });
 
     const uploadParams = {
-      Bucket: process.env.S3_BUCKET_NAME!,
+      Bucket: this.s3BucketName,
       Key: s3Key,
       Body: fileStream.buffer,
       ContentType: fileStream.mimetype,
@@ -146,7 +146,7 @@ export class S3Service {
     targetS3Key,
   }: IUploadS3ToFileLinkParams) {
     const uploadParams = {
-      Bucket: process.env.S3_BUCKET_NAME!,
+      Bucket: this.s3BucketName,
       Key: targetS3Key,
       Body: await fetch(sourceFileLink).then((res) => res.blob()),
     };
@@ -163,7 +163,7 @@ export class S3Service {
    */
   protected async deleteFileFromS3({ s3Key }: IDeleteFileFromS3Params) {
     const deleteParams = {
-      Bucket: process.env.S3_BUCKET_NAME,
+      Bucket: this.s3BucketName,
       Key: s3Key,
     };
 
@@ -184,7 +184,7 @@ export class S3Service {
     targetS3Key,
   }: ICopyFileFromS3Params) {
     const copyParams: CopyObjectCommandInput = {
-      Bucket: process.env.S3_BUCKET_NAME,
+      Bucket: this.s3BucketName,
       CopySource: sourceS3Key,
       Key: targetS3Key,
 
