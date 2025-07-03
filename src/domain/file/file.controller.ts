@@ -36,6 +36,7 @@ import { FileUploadRequestDto } from './request/file-upload.request';
 import { AuthRequest } from '../auth/interface/auth-request.interface';
 import { ChatEventEmitter } from '../event/enums/event-emitter-type.enum';
 import { UserRole } from '../auth/enums/user-role.enum';
+import { LogHttpInterceptor } from 'src/config/log/log-http.interceptor';
 
 @Controller('file')
 @ApiBearerAuth()
@@ -50,8 +51,7 @@ export class FileController {
 
   @Post('chat/upload')
   @RBAC([UserRole.ADMIN, UserRole.ADVERTISER, UserRole.AUTHOR])
-  @UseInterceptors(FileInterceptor('file'))
-  @UseInterceptors(LogFileInterceptor)
+  @UseInterceptors(FileInterceptor('file'), LogFileInterceptor)
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: '채팅 파일 업로드',
@@ -112,6 +112,7 @@ export class FileController {
 
   @Get('/chat/download')
   @RBAC([UserRole.ADMIN, UserRole.ADVERTISER, UserRole.AUTHOR])
+  @UseInterceptors(LogHttpInterceptor)
   @ApiOperation({
     summary: '채팅 파일 다운로드',
     description: `
