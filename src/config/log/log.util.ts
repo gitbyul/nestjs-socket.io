@@ -22,6 +22,10 @@ export class LogUtil {
   }
 
   // TODO: 해당 로그로 모두 변경 필요
+  WebSocketInfo(text: string) {
+    const { className, handlerName } = this.getClassNameAndHandlerName();
+    this.logger.info(`[WebSocket][${className}][${handlerName}][Info]${text}`);
+  }
   WebSocketSuccess(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
     this.logger.info(
@@ -34,17 +38,27 @@ export class LogUtil {
       `[WebSocket][${className}][${handlerName}][Failed]${text}`,
     );
   }
+
   HttpInfo(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
     this.logger.info(`[HTTP][${className}][${handlerName}]${text}`);
   }
-  HttpError(text: string) {
+  HttpSuccess(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
-    this.logger.error(`[HTTP][${className}][${handlerName}]${text}`);
+    this.logger.info(`[HTTP][${className}][${handlerName}][Success]${text}`);
   }
+  HttpError(error: Error) {
+    const { className, handlerName } = this.getClassNameAndHandlerName();
+    this.logger.error(`[HTTP][${className}][${handlerName}]${error.message}`);
+  }
+
   EventInfo(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
     this.logger.info(`[Event][${className}][${handlerName}]${text}`);
+  }
+  EventSuccess(text: string) {
+    const { className, handlerName } = this.getClassNameAndHandlerName();
+    this.logger.info(`[Event][${className}][${handlerName}][Success]${text}`);
   }
   EventError(text: string) {
     const { className, handlerName } = this.getClassNameAndHandlerName();
