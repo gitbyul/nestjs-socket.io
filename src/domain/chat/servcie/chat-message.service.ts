@@ -51,6 +51,15 @@ export class ChatMessageService {
    * @param messageId - 메시지 ID
    * @returns 메시지
    */
+  async getChatMessage(messageData: { chatRoomId: string; messageId: string }) {
+    const chatMessage = await this.chatMessagesRepository.findOne({
+      where: {
+        id: messageData.messageId,
+        chatRoom: { id: messageData.chatRoomId },
+      },
+    });
+    return chatMessage;
+  }
   async getChatMessageWithTransaction(
     manager: EntityManager,
     messageData: {

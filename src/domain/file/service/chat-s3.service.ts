@@ -24,4 +24,15 @@ export class ChatS3Service extends S3Service {
       entityId: chatRoomId,
     });
   }
+
+  /**
+   * 채팅 파일 다운로드
+   * @param s3Key S3 키
+   * @returns 파일 스트림
+   */
+  async downloadFileFromS3WithFileTypeChat(s3Key: string) {
+    return await this.downloadS3ToFileStream({
+      s3Key,
+    });
+  }
 }

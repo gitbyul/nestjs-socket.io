@@ -27,7 +27,7 @@ import { ChatMessageNotFoundException } from 'src/config/exception/chat-message-
 import { ChatRoomMemberNotFoundException } from 'src/config/exception/chat-room-member-not-found.exception';
 import { ChatRoomMemberReadMessageOrderInvalidException } from 'src/config/exception/chat-room-member-read-message-order-invalid.exception';
 import { ChatRoomMemberReadMessageSameIdException } from 'src/config/exception/chat-room-member-read-message-same-id.exception';
-import { FileService } from 'src/domain/file/service/file.service';
+import { FileRepository } from 'src/domain/file/repository/file.repository';
 import { FileNotFoundException } from 'src/config/exception/file-not-found.exception';
 
 @Injectable()
@@ -49,8 +49,8 @@ export class ChatService {
     private readonly chatTemplateService: ChatTemplateService,
     private readonly chatConnectionService: ChatConnectionService,
     private readonly userService: UserService,
-    @Inject(forwardRef(() => FileService))
-    private readonly fileService: FileService,
+    @Inject(forwardRef(() => FileRepository))
+    private readonly fileRepository: FileRepository,
   ) {}
 
   /**
@@ -535,7 +535,7 @@ export class ChatService {
         }
 
         // 4. 파일 조회
-        const fileEntity = await this.fileService.getFileWithTransaction(
+        const fileEntity = await this.fileRepository.getFileWithTransaction(
           manager,
           {
             fileId: body.fileId,
@@ -557,7 +557,7 @@ export class ChatService {
         );
 
         // 6. 파일 RelatedId 업데이트
-        await this.fileService.updateFileWithTransaction(manager, {
+        await this.fileRepository.updateFileWithTransaction(manager, {
           fileId: body.fileId,
           relatedId: chatMessage.id,
         });

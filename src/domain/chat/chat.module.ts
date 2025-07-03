@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ChatRoomService } from './servcie/chat-room.service';
@@ -34,7 +34,7 @@ import { ChatController } from './chat.controller';
       ChatConnectedUsers,
     ]),
     UserModule,
-    FileModule,
+    forwardRef(() => FileModule),
   ],
   providers: [
     ChatGateway,
@@ -47,6 +47,11 @@ import { ChatController } from './chat.controller';
     SocketEmitService,
   ],
   controllers: [ChatController],
-  exports: [ChatService, ChatRoomMemberService, SocketEmitService],
+  exports: [
+    ChatService,
+    ChatRoomMemberService,
+    ChatMessageService,
+    SocketEmitService,
+  ],
 })
 export class ChatModule {}

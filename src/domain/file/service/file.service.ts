@@ -1,123 +1,131 @@
-import { Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { ChatS3Service } from './chat-s3.service';
+import { FileRepository } from '../repository/file.repository';
 import { Files } from '../entity/Files.entity';
-import { EntityManager, Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { FileRelatedTable } from '../enums/file-releated-table.enums';
+import { LogUtil } from 'src/config/log/log.util';
+import { ChatMessageService } from 'src/domain/chat/servcie/chat-message.service';
 
 @Injectable()
 export class FileService {
   constructor(
-    @InjectRepository(Files)
-    private readonly fileRepository: Repository<Files>,
+    private readonly chatS3Service: ChatS3Service,
+    private readonly fileService: FileRepository,
+    @Inject(forwardRef(() => ChatMessageService))
+    private readonly chatMessageService: ChatMessageService,
+    private readonly logUtil: LogUtil,
   ) {}
 
-  async save(file: Files) {
-    return await this.fileRepository.save(file);
-  }
-
-  async updateFileWithTransaction(
-    manager: EntityManager,
-    dto: { fileId: string; relatedId: string },
-  ) {
-    return await manager.update(Files, dto.fileId, {
-      relatedId: dto.relatedId,
-    });
-  }
-
   /**
-   * 파일 조회
-   * @param fileId 파일 ID
-   * @returns 파일 정보
+   * 채팅 파일 업로드
+   * @param file 업로드 파일
+   * @param sender 업로드 유저 정보
+   * @returns 업로드 파일 정보
    */
-  async getFile(dto: { fileId: string }) {
-    return await this.fileRepository.findOne({
-      where: {
-        id: dto.fileId,
-      },
-    });
-  }
-  async getFileWithTransaction(
-    manager: EntityManager,
-    dto: { fileId: string },
-  ) {
-    return await manager.findOne(Files, {
-      where: {
-        id: dto.fileId,
-      },
-    });
-  }
-
-  /**
-   * 특정 chat message와 연결된 파일들을 조회합니다.
-   * @param chatMessageId chat message ID
-   * @returns 연결된 파일 목록
-   */
-  async getFilesByChatMessage(dto: {
-    chatMessageId: string;
-  }): Promise<Files[]> {
-    return await this.fileRepository.find({
-      where: {
-        relatedTable: FileRelatedTable.CHAT,
-        relatedId: dto.chatMessageId,
-        isDeleted: false,
-      },
-      order: {
-        orderNumber: 'ASC',
-      },
-    });
-  }
-  async getFilesByChatMessageWithTransaction(
-    manager: EntityManager,
-    dto: { chatMessageId: string },
-  ): Promise<Files[]> {
-    return await manager.find(Files, {
-      where: {
-        relatedTable: FileRelatedTable.CHAT,
-        relatedId: dto.chatMessageId,
-        isDeleted: false,
-      },
-      order: {
-        orderNumber: 'ASC',
-      },
-    });
-  }
-
-  /**
-   * chat message와 연결된 파일을 생성합니다.
-   * @param params 파일 생성 파라미터
-   * @returns 생성된 파일
-   */
-  async createChatMessageFile(params: {
-    originalFilename: string;
-    mimetype: string;
-    size: number | null;
-    path: string;
-    url: string;
-    chatMessageId?: string | null;
-    orderNumber?: number | null;
-  }): Promise<Files> {
-    const file = Files.newChatMessageFile({
-      ...params,
-    });
-
-    return await this.fileRepository.save(file);
-  }
-  async createChatMessageFileWithTransaction(
-    manager: EntityManager,
-    params: {
-      originalFilename: string;
-      mimetype: string;
-      size: number | null;
-      path: string;
-      url: string;
-      chatMessageId: string;
-      orderNumber?: number | null;
-    },
+  async chatFileUploadFile(
+    file: Express.Multer.File,
+    dto: { chatRoomId: string },
   ): Promise<Files> {
-    const file = Files.newChatMessageFile({
-      ...params,
-    });
+    // S3 업로드
+    const result = await this.chatS3Service.uploadFileToS3WithFileTypeChat(
+      file,
+      dto.chatRoomId,
+    );
 
-    return await manager.save(Files, file);
+    // 파일 엔티티 생성 및 저장
+    return await this.fileService.createChatMessageFile({
+      originalFilename: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      path: result.Key as string,
+      url: result.Location as string,
+    });
+  }
+
+  /**
+   * 파일이 사용자의 채팅방에 속한 파일인지 검증합니다.
+   * @param fileId 파일의 고유 ID
+   * @param userId 요청 유저의 ID
+   * @param chatRoomId 요청 채팅방의 ID
+   * @throws NotFoundException 파일이 없거나 채팅방에 속하지 않은 경우
+   */
+  async validateFileBelongsToChatRoom(
+    fileId: string,
+    userId: string,
+    chatRoomId: string,
+  ): Promise<void> {
+    // 파일 엔티티 조회
+    const file = await this.fileService.getFileByFileId({ fileId });
+    if (!file) {
+      throw new NotFoundException(`[${fileId}] File not found`);
+    }
+
+    // 파일이 요청한 채팅방에 속하는지 확인
+    if (file.relatedId !== chatRoomId) {
+      this.logUtil.HttpError(
+        new Error(
+          `[${fileId}] File does not belong to chatRoomId: ${chatRoomId}`,
+        ),
+      );
+      throw new NotFoundException(
+        `[${fileId}] File does not belong to chatRoomId: ${chatRoomId}`,
+      );
+    }
+
+    // 채팅방에 속한 메시지인지 검증
+    const chatMessage = await this.chatMessageService.getChatMessage({
+      chatRoomId,
+      messageId: file.relatedId,
+    });
+    if (!chatMessage) {
+      throw new NotFoundException(
+        `[${fileId}] Chat message not found in chatRoomId: ${chatRoomId}`,
+      );
+    }
+  }
+
+  /**
+   * 파일 ID를 기반으로 파일 엔티티와 S3에서 WebStream을 반환합니다.
+   * @param fileId 파일의 고유 ID
+   * @returns 파일 엔티티와 WebStream 객체
+   */
+  async getS3FileWithWebStreamAndFileEntity(fileId: string) {
+    try {
+      // 1. 파일 엔티티 조회
+      const file = await this.fileService.getFileByFileId({ fileId });
+      if (!file) {
+        throw new NotFoundException(`[${fileId}] File not found`);
+      }
+
+      // 2. S3에서 파일 객체 다운로드
+      const s3Object =
+        await this.chatS3Service.downloadFileFromS3WithFileTypeChat(file.path);
+      if (!s3Object) {
+        throw new NotFoundException(`[${file.path}] S3 object not found`);
+      }
+      if (!s3Object.Body) {
+        throw new NotFoundException(`[${file.path}] S3 object body not found`);
+      }
+
+      // 3. S3 객체의 Body를 WebStream으로 변환
+      const webStream: ReadableStream = s3Object.Body.transformToWebStream();
+      if (!webStream) {
+        throw new NotFoundException(`[${file.path}] Web stream not found`);
+      }
+
+      // 4. 파일 엔티티와 WebStream 반환
+      return {
+        file,
+        webStream,
+      };
+    } catch (error) {
+      // 예외 발생 시 로그 기록 후 예외 재전파
+      this.logUtil.HttpError(error);
+      throw error;
+    }
   }
 }

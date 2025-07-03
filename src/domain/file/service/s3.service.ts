@@ -17,6 +17,7 @@ import {
   IDeleteFileFromS3Params,
   ICopyFileFromS3Params,
 } from '../interface/s3-upload.interface';
+import { NotFoundException } from '@nestjs/common';
 
 export class S3Service {
   protected readonly s3Client: S3Client;
@@ -84,12 +85,19 @@ export class S3Service {
    * @param s3Key S3 키
    * @returns 파일 스트림
    */
-  protected async getFileFromS3({ s3Key }: { s3Key: string }) {
-    const getParams = {
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: s3Key,
-    };
-    return await this.s3Client.send(new GetObjectCommand(getParams));
+  protected async downloadS3ToFileStream({ s3Key }: { s3Key: string }) {
+    try {
+      const getParams = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: s3Key,
+      };
+      return await this.s3Client.send(new GetObjectCommand(getParams));
+    } catch (error) {
+      if (error.Code === 'NoSuchKey') {
+        throw new NotFoundException(`[${s3Key}] S3 object not found`);
+      }
+      throw error;
+    }
   }
 
   /**
