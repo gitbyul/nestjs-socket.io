@@ -9,6 +9,18 @@ import * as _ from 'lodash';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 import { LogUtil } from './log.util';
 
+/**
+ * 파일 업로드 로깅 인터셉터
+ * Content-Type: multipart/form-data 인 경우 로깅
+ * FileInterceptor 인터셉터와 동일시 작성해야 함
+ * @example
+ * ```typescript
+ * _@UseInterceptors(FileInterceptor('file'), LogFileInterceptor)
+ * uploadFile(@UploadedFile() file: Express.Multer.File) {
+ *   return file;
+ * }
+ * ```
+ */
 @Injectable()
 export class LogFileInterceptor implements NestInterceptor {
   constructor(private readonly logger: LogUtil) {}
