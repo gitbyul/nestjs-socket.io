@@ -18,9 +18,9 @@ import { ReadMessageSuccessResponseDto } from './dto/response/read-message-succe
 import { ReadMessageFailedResponseDto } from './dto/response/read-message-failed.response';
 import { UnreadCountSummaryFailedResponseDto } from './dto/response/unread-count-summary-failed.response';
 
-@Controller('socket')
-@ApiTags('Socket')
-export class ChatController {
+@Controller('socket-helper')
+@ApiTags('SocketHelper')
+export class SocketHelperController {
   @Get('/connection_established')
   @ApiOperation({
     summary: '소켓 연결 성공',
