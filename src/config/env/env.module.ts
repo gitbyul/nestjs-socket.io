@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import * as Joi from 'Joi';
+import * as Joi from 'joi';
 
 export const envValidationSchema = Joi.object({
   ENV: Joi.string().valid('dev', 'prod').required(),
