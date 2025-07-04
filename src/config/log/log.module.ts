@@ -33,10 +33,7 @@ import { LogFileInterceptor } from './log-file.interceptor';
             }),
           ),
           datePattern: 'YYYY-MM-DD',
-          dirname:
-            process.env.ENV === 'dev'
-              ? path.join(process.cwd(), 'log', 'dev')
-              : path.join(process.cwd(), 'log', 'prod'),
+          dirname: path.join(process.cwd(), 'log'),
           filename: '%DATE%_api.log',
           maxFiles: '14d',
           zippedArchive: true,
