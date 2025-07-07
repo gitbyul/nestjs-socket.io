@@ -11,6 +11,7 @@ import {
 import {
   IsDate,
   IsEnum,
+  IsJSON,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -26,6 +27,10 @@ import { ChatMessageType } from 'src/domain/chat/enums/chat-message-type.enum';
 import { ValidationEntity } from 'src/config/entity/Validation.entity';
 import { ChatRooms } from './ChatRooms.entity';
 import { Files } from 'src/domain/file/entity/Files.entity';
+import {
+  ChatTemplateButtonLocationType,
+  ChatTemplateNoticeType,
+} from '../enums/chat-template-item-type';
 
 @Entity({ name: 'chat_messages' })
 export class ChatMessages extends ValidationEntity {
@@ -59,7 +64,7 @@ export class ChatMessages extends ValidationEntity {
     nullable: false,
     comment: '메시지 타입 (text, file)',
   })
-  type: ChatMessageType;
+  type: ChatMessageType; // TEXT, FILE, SYSTEM
 
   @IsString()
   @MinLength(1)
@@ -68,6 +73,36 @@ export class ChatMessages extends ValidationEntity {
   @IsNotEmpty()
   @Column({ name: 'message', type: 'text', nullable: true, comment: '메시지' })
   message: string | null;
+
+  @IsJSON()
+  @IsOptional()
+  @Column({
+    name: 'system_message',
+    type: 'text',
+    nullable: true,
+    comment: '시스템 메시지',
+  })
+  systemMessage?: {
+    title: string;
+    content: string;
+    notice?: {
+      type: ChatTemplateNoticeType; // NOTICE, WARNING, ALERT
+      message: string;
+    };
+    buttons?: {
+      btnLocation?: ChatTemplateButtonLocationType; // LEFT, RIGHT
+      text: string;
+    }[];
+    files?: {
+      originalName: string;
+      fileId: string;
+      size: number;
+    }[];
+    links?: {
+      title: string;
+      url: string;
+    }[];
+  };
 
   @IsEnum(UserRole)
   @IsNotEmpty()

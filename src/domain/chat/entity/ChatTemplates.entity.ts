@@ -13,24 +13,47 @@ import {
   IsString,
 } from 'class-validator';
 
-import { ChatTemplateType } from '../enums/chat-template-type';
-
 import { ValidationEntity } from 'src/config/entity/Validation.entity';
+import {
+  ChatTemplateNoticeType,
+  ChatTemplateType,
+} from '../enums/chat-template-item-type';
+import { ChatTemplateCode } from '../enums/chat-template-code';
 
 @Entity({ name: 'chat_templates' })
 export class ChatTemplates extends ValidationEntity {
   @PrimaryColumn({ type: 'char', length: 36, comment: 'UUID' })
   id: string;
 
+  @IsEnum(ChatTemplateCode)
+  @IsNotEmpty()
+  @Column({
+    name: 'code',
+    type: 'varchar',
+    length: 100,
+    comment: '채팅 템플릿 코드',
+  })
+  code: ChatTemplateCode; // 채팅 템플릿 코드
+
   @IsEnum(ChatTemplateType)
   @IsNotEmpty()
   @Column({
     name: 'type',
-    type: 'enum',
-    enum: ChatTemplateType,
+    type: 'varchar',
+    length: 100,
     comment: '채팅 템플릿 타입',
   })
-  type: ChatTemplateType;
+  type: ChatTemplateType; // TEMPLATE, BUTTON
+
+  @IsString()
+  @IsOptional()
+  @Column({
+    name: 'action_type',
+    type: 'varchar',
+    length: 100,
+    comment: '채팅 템플릿 액션 타입',
+  })
+  actionType: ChatTemplateNoticeType;
 
   @IsString()
   @IsOptional()
@@ -38,7 +61,7 @@ export class ChatTemplates extends ValidationEntity {
     name: 'title',
     type: 'varchar',
     length: 100,
-    nullable: true,
+    nullable: false,
     comment: '채팅 템플릿 제목',
   })
   title: string;
@@ -48,54 +71,10 @@ export class ChatTemplates extends ValidationEntity {
   @Column({
     name: 'content',
     type: 'text',
-    nullable: true,
+    nullable: false,
     comment: '채팅 템플릿 내용',
   })
-  content?: string;
-
-  @IsString()
-  @IsOptional()
-  @Column({
-    name: 'bg_color',
-    type: 'varchar',
-    length: 10,
-    nullable: true,
-    comment: '채팅 템플릿 배경 색상',
-  })
-  bgColor?: string;
-
-  @IsString()
-  @IsOptional()
-  @Column({
-    name: 'text_color',
-    type: 'varchar',
-    length: 10,
-    nullable: true,
-    comment: '채팅 템플릿 텍스트 색상',
-  })
-  textColor?: string;
-
-  @IsString()
-  @IsOptional()
-  @Column({
-    name: 'button_color',
-    type: 'varchar',
-    length: 10,
-    nullable: true,
-    comment: '채팅 템플릿 버튼 색상(버튼 타입 일 때만 사용)',
-  })
-  buttonColor?: string;
-
-  @IsString()
-  @IsOptional()
-  @Column({
-    name: 'url',
-    type: 'varchar',
-    length: 300,
-    nullable: true,
-    comment: '채팅 템플릿 링크(버튼 타입 일 때만 사용)',
-  })
-  url?: string;
+  content: string;
 
   @IsDate()
   @IsNotEmpty()
