@@ -7,7 +7,7 @@ import { UpdateChatRoomMemberLastReadMessageDto } from '../dto/update-chat-room-
 import { UpdateChatRoomMemberUnreadMessageCountDto } from '../dto/update-chat-room-member-unread-message-count.dto';
 
 @Injectable()
-export class ChatRoomMemberService {
+export class ChatRoomMemberRepository {
   constructor(
     @InjectRepository(ChatRoomMembers)
     private chatRoomMembersRepository: Repository<ChatRoomMembers>,

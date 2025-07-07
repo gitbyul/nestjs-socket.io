@@ -8,7 +8,7 @@ import { GetChatRoomDto } from '../dto/get-chat-room.dto';
 import { UpdateChatRoomLastMessageDto } from '../dto/update-chat-room-last-message.dto';
 
 @Injectable()
-export class ChatRoomService {
+export class ChatRoomRepository {
   constructor(
     @InjectRepository(ChatRooms)
     private chatRoomsRepository: Repository<ChatRooms>,

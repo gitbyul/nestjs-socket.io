@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { ChatTemplates } from '../entity/ChatTemplates.entity';
 
 @Injectable()
-export class ChatTemplateService {
+export class ChatTemplateRepository {
   constructor(
     @InjectRepository(ChatTemplates)
     private chatTemplatesRepository: Repository<ChatTemplates>,

@@ -10,11 +10,10 @@ import { ConnectionStatus } from '../enums/connection-state.enum';
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 import { EventMessage } from '../enums/chat-event-type.enum';
 
-import { ChatRoomService } from './chat-room.service';
-import { ChatMessageService } from './chat-message.service';
-import { ChatTemplateService } from './chat-templates.service';
-import { ChatRoomMemberService } from './chat-room-member.service';
-import { ChatConnectionService } from './chat-connection.service';
+import { ChatRoomRepository } from '../repository/chat-room.repository';
+import { ChatMessageRepository } from '../repository/chat-message.repository';
+import { ChatRoomMemberRepository } from '../repository/chat-room-member.repository';
+import { ChatConnectionRepository } from '../repository/chat-connection.repository';
 import { UserService } from 'src/domain/user/service/user.service';
 
 import { SendMessageRequestDto } from '../dto/request/send-message.request';
@@ -43,11 +42,10 @@ export class ChatService {
   constructor(
     private readonly logUtil: LogUtil,
     private readonly dataSource: DataSource,
-    private readonly chatRoomService: ChatRoomService,
-    private readonly chatRoomMemberService: ChatRoomMemberService,
-    private readonly chatMessageService: ChatMessageService,
-    private readonly chatTemplateService: ChatTemplateService,
-    private readonly chatConnectionService: ChatConnectionService,
+    private readonly chatRoomRepository: ChatRoomRepository,
+    private readonly chatRoomMemberRepository: ChatRoomMemberRepository,
+    private readonly chatMessageRepository: ChatMessageRepository,
+    private readonly chatConnectionRepository: ChatConnectionRepository,
     private readonly userService: UserService,
     @Inject(forwardRef(() => FileRepository))
     private readonly fileRepository: FileRepository,
@@ -65,7 +63,7 @@ export class ChatService {
     );
 
     // 채팅방 목록 조회
-    const activeChatRooms = await this.chatRoomService.getActiveChatRoomList(
+    const activeChatRooms = await this.chatRoomRepository.getActiveChatRoomList(
       userPayload.id,
     );
 
@@ -79,7 +77,7 @@ export class ChatService {
     this.userConnections.set(userPayload.id, userConnectionInfo);
 
     // DB에 연결 정보 저장
-    await this.chatConnectionService.connection(
+    await this.chatConnectionRepository.connection(
       userPayload.id,
       userPayload.role,
       socket.id,
@@ -121,7 +119,7 @@ export class ChatService {
       //     // // 채팅방 유저 정보 삭제 이벤트 전송 -- gateway 에서 처리로
       //     // this.broadcastUserLeftChatRoom(chatRoomId, userId);
       //     // // DB에서 채팅방 로그아웃 처리
-      //     // await this.chatRoomMemberService.leaveRoom(userId, chatRoomId);
+      //     // await this.chatRoomMemberRepository.leaveRoom(userId, chatRoomId);
       //   }
       // });
 
@@ -130,7 +128,7 @@ export class ChatService {
       this.socketToUserMap.delete(socketId);
 
       // DB에서 연결 정보 삭제
-      await this.chatConnectionService.disconnect(userId, socketId);
+      await this.chatConnectionRepository.disconnect(userId, socketId);
     } catch (error) {
       this.logUtil.error(
         `[ChatService][disconnectUserWithDatabaseAndMemory] disconnectUser: ${error} ${socketId}`,
@@ -190,7 +188,7 @@ export class ChatService {
    */
   async unreadCountSummary(userId: string) {
     const chatRoomList =
-      await this.chatRoomService.getChatRoomListWithMember(userId);
+      await this.chatRoomRepository.getChatRoomListWithMember(userId);
 
     const unreadCountSummary = chatRoomList
       .map((chatRoom) => {
@@ -219,7 +217,7 @@ export class ChatService {
    */
   async getChatRoomListWithMember(userId: string) {
     const chatRooms =
-      await this.chatRoomService.getChatRoomListWithMember(userId);
+      await this.chatRoomRepository.getChatRoomListWithMember(userId);
     return chatRooms;
   }
 
@@ -248,20 +246,18 @@ export class ChatService {
         }
 
         // 2. 채팅방 조회
-        const chatRoom = await this.chatRoomService.getChatRoomWithTransaction(
-          manager,
-          {
+        const chatRoom =
+          await this.chatRoomRepository.getChatRoomWithTransaction(manager, {
             chatRoomId: body.chatRoomId,
             userId: user.userId,
-          },
-        );
+          });
         if (!chatRoom) {
           throw new ChatRoomNotFoundException(body.chatRoomId, user.userId);
         }
 
         // 3. 채팅방 멤버 조회
         const chatRoomMember =
-          await this.chatRoomMemberService.getChatRoomMemberWithTransaction(
+          await this.chatRoomMemberRepository.getChatRoomMemberWithTransaction(
             manager,
             {
               chatRoomId: chatRoom.id,
@@ -273,28 +269,29 @@ export class ChatService {
         }
 
         // 4. 메시지 저장
-        const chatMessage = await this.chatMessageService.createWithTransaction(
-          manager,
-          {
+        const chatMessage =
+          await this.chatMessageRepository.createWithTransaction(manager, {
             chatRoomId: body.chatRoomId,
             templateId: body.templateId ?? undefined,
             message: body.message,
             type: ChatMessageType.TEXT,
             senderType: user.userRole,
             senderId: user.userId,
+          });
+
+        // 5. 채팅방 마지막 메시지 업데이트
+        await this.chatRoomRepository.updateLastMessageWithTransaction(
+          manager,
+          {
+            chatRoomId: body.chatRoomId,
+            message: body.message,
+            senderType: user.userRole,
+            senderId: user.userId,
           },
         );
 
-        // 5. 채팅방 마지막 메시지 업데이트
-        await this.chatRoomService.updateLastMessageWithTransaction(manager, {
-          chatRoomId: body.chatRoomId,
-          message: body.message,
-          senderType: user.userRole,
-          senderId: user.userId,
-        });
-
         // 6. 채팅방 멤버 상태값 업데이트
-        await this.chatRoomMemberService.updateLastReadMessageWithTransaction(
+        await this.chatRoomMemberRepository.updateLastReadMessageWithTransaction(
           manager,
           {
             chatRoomId: chatRoom.id,
@@ -305,7 +302,9 @@ export class ChatService {
 
         // 7. 채팅방 멤버 목록 조회
         const chatRoomMemberList =
-          await this.chatRoomMemberService.getChatRoomMemberList(chatRoom.id);
+          await this.chatRoomMemberRepository.getChatRoomMemberList(
+            chatRoom.id,
+          );
 
         // 8. 채팅방 멤버 목록 순회
         const unreadChatRoomMemberList = chatRoomMemberList.filter(
@@ -313,7 +312,7 @@ export class ChatService {
         );
         for (const chatRoomMember of unreadChatRoomMemberList) {
           // 9. 채팅방 멤버 읽지 않은 메시지 수 업데이트
-          await this.chatRoomMemberService.updateUnreadMessageCountWithTransaction(
+          await this.chatRoomMemberRepository.updateUnreadMessageCountWithTransaction(
             manager,
             {
               chatRoomId: chatRoom.id,
@@ -381,20 +380,18 @@ export class ChatService {
         }
 
         // 2. 채팅방 조회
-        const chatRoom = await this.chatRoomService.getChatRoomWithTransaction(
-          manager,
-          {
+        const chatRoom =
+          await this.chatRoomRepository.getChatRoomWithTransaction(manager, {
             chatRoomId: body.chatRoomId,
             userId: user.userId,
-          },
-        );
+          });
         if (!chatRoom) {
           throw new ChatRoomNotFoundException(body.chatRoomId, user.userId);
         }
 
         // 3. 채팅방 멤버 조회
         const chatRoomMember =
-          await this.chatRoomMemberService.getChatRoomMemberWithTransaction(
+          await this.chatRoomMemberRepository.getChatRoomMemberWithTransaction(
             manager,
             {
               chatRoomId: chatRoom.id,
@@ -407,7 +404,7 @@ export class ChatService {
 
         // 4. 메시지 조회
         const chatMessages =
-          await this.chatMessageService.getChatMessageListWithTransaction(
+          await this.chatMessageRepository.getChatMessageListWithTransaction(
             manager,
             {
               chatRoomId: body.chatRoomId,
@@ -459,7 +456,7 @@ export class ChatService {
         }
 
         // 5. chat_room_members 상태값 업데이트
-        await this.chatRoomMemberService.updateLastReadMessageWithTransaction(
+        await this.chatRoomMemberRepository.updateLastReadMessageWithTransaction(
           manager,
           {
             chatRoomId: chatRoom.id,
@@ -510,20 +507,18 @@ export class ChatService {
         }
 
         // 2. 채팅방 조회
-        const chatRoom = await this.chatRoomService.getChatRoomWithTransaction(
-          manager,
-          {
+        const chatRoom =
+          await this.chatRoomRepository.getChatRoomWithTransaction(manager, {
             chatRoomId: body.chatRoomId,
             userId: user.userId,
-          },
-        );
+          });
         if (!chatRoom) {
           throw new ChatRoomNotFoundException(body.chatRoomId, user.userId);
         }
 
         // 3. 채팅방 멤버 조회
         const chatRoomMember =
-          await this.chatRoomMemberService.getChatRoomMemberWithTransaction(
+          await this.chatRoomMemberRepository.getChatRoomMemberWithTransaction(
             manager,
             {
               chatRoomId: chatRoom.id,
@@ -546,15 +541,13 @@ export class ChatService {
         }
 
         // 5. 파일 메시지 저장
-        const chatMessage = await this.chatMessageService.createWithTransaction(
-          manager,
-          {
+        const chatMessage =
+          await this.chatMessageRepository.createWithTransaction(manager, {
             chatRoomId: body.chatRoomId,
             type: ChatMessageType.FILE,
             senderType: user.userRole,
             senderId: user.userId,
-          },
-        );
+          });
 
         // 6. 파일 RelatedId 업데이트
         await this.fileRepository.updateFileWithTransaction(manager, {
@@ -563,15 +556,18 @@ export class ChatService {
         });
 
         // 7. 채팅방 마지막 메시지 업데이트
-        await this.chatRoomService.updateLastMessageWithTransaction(manager, {
-          chatRoomId: body.chatRoomId,
-          message: fileEntity.originalFilename,
-          senderType: user.userRole,
-          senderId: user.userId,
-        });
+        await this.chatRoomRepository.updateLastMessageWithTransaction(
+          manager,
+          {
+            chatRoomId: body.chatRoomId,
+            message: fileEntity.originalFilename,
+            senderType: user.userRole,
+            senderId: user.userId,
+          },
+        );
 
         // 8. 채팅방 멤버 상태값 업데이트
-        await this.chatRoomMemberService.updateLastReadMessageWithTransaction(
+        await this.chatRoomMemberRepository.updateLastReadMessageWithTransaction(
           manager,
           {
             chatRoomId: chatRoom.id,
@@ -582,7 +578,9 @@ export class ChatService {
 
         // 9. 채팅방 멤버 목록 조회
         const chatRoomMemberList =
-          await this.chatRoomMemberService.getChatRoomMemberList(chatRoom.id);
+          await this.chatRoomMemberRepository.getChatRoomMemberList(
+            chatRoom.id,
+          );
 
         // 10. 채팅방 멤버 목록 순회
         const unreadChatRoomMemberList = chatRoomMemberList.filter(
@@ -590,7 +588,7 @@ export class ChatService {
         );
         for (const chatRoomMember of unreadChatRoomMemberList) {
           // 11. 채팅방 멤버 읽지 않은 메시지 수 업데이트
-          await this.chatRoomMemberService.updateUnreadMessageCountWithTransaction(
+          await this.chatRoomMemberRepository.updateUnreadMessageCountWithTransaction(
             manager,
             {
               chatRoomId: chatRoom.id,

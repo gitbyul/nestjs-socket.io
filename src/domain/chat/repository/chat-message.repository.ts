@@ -7,7 +7,7 @@ import { ChatMessageType } from '../enums/chat-message-type.enum';
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 
 @Injectable()
-export class ChatMessageService {
+export class ChatMessageRepository {
   constructor(
     @InjectRepository(ChatMessages)
     private chatMessagesRepository: Repository<ChatMessages>,

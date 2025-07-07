@@ -6,7 +6,7 @@ import { ChatConnectedUsers } from '../entity/ChatConnectedUsers.entity';
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 
 @Injectable()
-export class ChatConnectionService {
+export class ChatConnectionRepository {
   constructor(
     @InjectRepository(ChatConnectedUsers)
     private chatConnectedUsersRepository: Repository<ChatConnectedUsers>,

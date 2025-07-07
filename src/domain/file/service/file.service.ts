@@ -8,15 +8,15 @@ import { ChatS3Service } from './chat-s3.service';
 import { FileRepository } from '../repository/file.repository';
 import { Files } from '../entity/Files.entity';
 import { LogUtil } from 'src/config/log/log.util';
-import { ChatMessageService } from 'src/domain/chat/servcie/chat-message.service';
+import { ChatMessageRepository } from 'src/domain/chat/repository/chat-message.repository';
 
 @Injectable()
 export class FileService {
   constructor(
     private readonly chatS3Service: ChatS3Service,
-    private readonly fileService: FileRepository,
-    @Inject(forwardRef(() => ChatMessageService))
-    private readonly chatMessageService: ChatMessageService,
+    private readonly fileRepository: FileRepository,
+    @Inject(forwardRef(() => ChatMessageRepository))
+    private readonly chatMessageRepository: ChatMessageRepository,
     private readonly logUtil: LogUtil,
   ) {}
 
@@ -37,7 +37,7 @@ export class FileService {
     );
 
     // 파일 엔티티 생성 및 저장
-    return await this.fileService.createChatMessageFile({
+    return await this.fileRepository.createChatMessageFile({
       originalFilename: file.originalname,
       mimetype: file.mimetype,
       size: file.size,
@@ -59,7 +59,7 @@ export class FileService {
     chatRoomId: string,
   ): Promise<void> {
     // 파일 엔티티 조회
-    const file = await this.fileService.getFileByFileId({ fileId });
+    const file = await this.fileRepository.getFileByFileId({ fileId });
     if (!file) {
       throw new NotFoundException(`[${fileId}] File not found`);
     }
@@ -77,7 +77,7 @@ export class FileService {
     }
 
     // 채팅방에 속한 메시지인지 검증
-    const chatMessage = await this.chatMessageService.getChatMessage({
+    const chatMessage = await this.chatMessageRepository.getChatMessage({
       chatRoomId,
       messageId: file.relatedId,
     });
@@ -96,7 +96,7 @@ export class FileService {
   async getS3FileWithWebStreamAndFileEntity(fileId: string) {
     try {
       // 1. 파일 엔티티 조회
-      const file = await this.fileService.getFileByFileId({ fileId });
+      const file = await this.fileRepository.getFileByFileId({ fileId });
       if (!file) {
         throw new NotFoundException(`[${fileId}] File not found`);
       }
