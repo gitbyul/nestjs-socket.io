@@ -9,6 +9,7 @@ import { EventErrorCode } from 'src/domain/chat/enums/chat-error-code.enum';
 import { ChatRoomNotFoundException } from 'src/config/exception/chat-room-not-found.exception';
 import { UserNotFoundException } from 'src/config/exception/user-not-found.exception';
 import { SocketNotFoundException } from 'src/config/exception/socket-not-found.exception';
+import { SendSystemMessageRequestDto } from '../request/system-message.request';
 
 @Injectable()
 export class ChatEventListener implements OnModuleInit {
@@ -39,7 +40,7 @@ export class ChatEventListener implements OnModuleInit {
   @OnEvent(ChatEventEmitter.SEND_FILE_MESSAGE)
   async handleFileMessage(payload: SendFileMessageRequestDto) {
     this.logUtil.EventInfo(
-      `[${payload.eventId}]Event received: ${JSON.stringify(payload)}`,
+      `[${ChatEventEmitter.SEND_FILE_MESSAGE}][${payload.eventId}]Event received: ${JSON.stringify(payload)}`,
     );
     const socket = this.chatService.getUserConnectionSocket(payload.senderId);
     try {
@@ -81,7 +82,7 @@ export class ChatEventListener implements OnModuleInit {
         });
       }
       this.logUtil.EventInfo(
-        `[${payload.eventId}]Event completed : ${JSON.stringify(dto)}`,
+        `[${ChatEventEmitter.SEND_FILE_MESSAGE}][${payload.eventId}]Event completed : ${JSON.stringify(dto)}`,
       );
     } catch (error) {
       let errorCode = EventErrorCode.INTERNAL_ERROR;
@@ -100,7 +101,48 @@ export class ChatEventListener implements OnModuleInit {
         this.socketEmitService.sendMessageFailed(socket, errorCode, error);
       }
       this.logUtil.EventError(
-        `[${payload.eventId}]Event failed : ${error.message}`,
+        `[${ChatEventEmitter.SEND_FILE_MESSAGE}][${payload.eventId}]Event failed : ${error.message}`,
+      );
+    }
+  }
+
+  @OnEvent(ChatEventEmitter.SEND_SYSTEM_MESSAGE)
+  async handleSystemMessage(payload: SendSystemMessageRequestDto) {
+    this.logUtil.EventInfo(
+      `[${payload.eventId}]Event received: ${JSON.stringify(payload)}`,
+    );
+
+    try {
+      const userInfo = {
+        userId: payload.senderId,
+        userRole: payload.senderType,
+      };
+      const body = {
+        chatRoomId: payload.chatRoomId,
+        systemMessage: payload.systemMessage,
+      };
+      // 1. 시스템 메시지 저장
+      await this.chatService.sendSystemMessage(userInfo, body);
+
+      this.logUtil.EventInfo(
+        `[${ChatEventEmitter.SEND_SYSTEM_MESSAGE}][${payload.eventId}]Event completed : ${JSON.stringify(payload)}`,
+      );
+    } catch (error) {
+      let errorCode = EventErrorCode.INTERNAL_ERROR;
+      const errorMessage = error.message ?? error;
+      switch (error.constructor) {
+        case UserNotFoundException:
+          errorCode = EventErrorCode.USER_NOT_FOUND;
+          break;
+        case ChatRoomNotFoundException:
+          errorCode = EventErrorCode.CHAT_ROOM_NOT_FOUND;
+          break;
+        case SocketNotFoundException:
+          errorCode = EventErrorCode.INTERNAL_ERROR;
+          break;
+      }
+      this.logUtil.EventError(
+        `[${ChatEventEmitter.SEND_SYSTEM_MESSAGE}][${payload.eventId}]Event failed : ${errorMessage}`,
       );
     }
   }
