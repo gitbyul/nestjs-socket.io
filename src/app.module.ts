@@ -13,6 +13,7 @@ import { ResponseInterceptor } from './config/interceptor/response.intercepetor'
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { EventModule } from './domain/event/event.module';
+import { SystemMessageModule } from './domain/system-message/system-message.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { EventModule } from './domain/event/event.module';
     LogModule,
     AuthModule,
     ChatModule,
+    SystemMessageModule,
     FileModule,
     EventModule,
   ],
