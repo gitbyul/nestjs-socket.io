@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AdProposals } from 'src/domain/adproposals/entity/AdProposals.entity';
 import { ChatConnectedUsers } from 'src/domain/chat/entity/ChatConnectedUsers.entity';
 import { ChatMessages } from 'src/domain/chat/entity/ChatMessages.entity';
 import { ChatRoomMembers } from 'src/domain/chat/entity/ChatRoomMembers.entity';
@@ -34,6 +35,7 @@ import { Author } from 'src/domain/user/entity/Author.entity';
           ChatConnectedUsers,
           Author,
           Advertisers,
+          AdProposals,
           AdminUser,
           Files,
         ],
