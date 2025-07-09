@@ -6,15 +6,18 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import {
+  IsBoolean,
   IsDate,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
 
 import { ValidationEntity } from 'src/config/entity/Validation.entity';
 import {
+  ChatTemplateButtonLocationType,
   ChatTemplateNoticeType,
   ChatTemplateType,
 } from '../enums/chat-template-item-type';
@@ -53,7 +56,7 @@ export class ChatTemplates extends ValidationEntity {
     length: 100,
     comment: '채팅 템플릿 액션 타입',
   })
-  actionType: ChatTemplateNoticeType;
+  actionType: ChatTemplateNoticeType | ChatTemplateButtonLocationType;
 
   @IsString()
   @IsOptional()
@@ -75,6 +78,50 @@ export class ChatTemplates extends ValidationEntity {
     comment: '채팅 템플릿 내용',
   })
   content: string;
+
+  @IsString()
+  @IsOptional()
+  @Column({
+    name: 'url',
+    type: 'varchar',
+    length: 512,
+    nullable: true,
+    comment: '채팅 템플릿 링크',
+  })
+  url?: string | null;
+
+  @IsNumber()
+  @IsOptional()
+  @Column({
+    name: 'order',
+    type: 'int',
+    nullable: true,
+    default: 0,
+    comment: '순서',
+  })
+  order: number;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  @Column({
+    name: 'is_link',
+    type: 'boolean',
+    nullable: false,
+    default: false,
+    comment: '링크 여부',
+  })
+  isLink: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  @Column({
+    name: 'is_file',
+    type: 'boolean',
+    nullable: false,
+    default: false,
+    comment: '파일 여부',
+  })
+  isFile: boolean;
 
   @IsDate()
   @IsNotEmpty()

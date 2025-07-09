@@ -30,7 +30,8 @@ import { Files } from 'src/domain/file/entity/Files.entity';
 import {
   ChatTemplateButtonLocationType,
   ChatTemplateNoticeType,
-} from '../enums/chat-template-item-type';
+} from 'src/domain/chat/enums/chat-template-item-type';
+import { SystemMessageDto } from 'src/domain/system-message/dto/system-message.dto';
 
 @Entity({ name: 'chat_messages' })
 export class ChatMessages extends ValidationEntity {
@@ -44,16 +45,6 @@ export class ChatMessages extends ValidationEntity {
   })
   @JoinColumn({ name: 'chat_room_id' })
   chatRoom: ChatRooms;
-
-  @IsUUID()
-  @IsOptional()
-  @Column({
-    name: 'template_id',
-    type: 'uuid',
-    nullable: true,
-    comment: '메시지 템플릿 ID',
-  })
-  templateId: string | null;
 
   @IsEnum(ChatMessageType)
   @IsNotEmpty()
@@ -74,35 +65,40 @@ export class ChatMessages extends ValidationEntity {
   @Column({ name: 'message', type: 'text', nullable: true, comment: '메시지' })
   message: string | null;
 
-  @IsJSON()
   @IsOptional()
   @Column({
     name: 'system_message',
     type: 'text',
     nullable: true,
     comment: '시스템 메시지',
+    transformer: {
+      to: (value: SystemMessageDto) => JSON.stringify(value),
+      from: (value: string) => JSON.parse(value),
+    },
   })
-  systemMessage?: {
-    title: string;
-    content: string;
-    notice?: {
-      type: ChatTemplateNoticeType; // NOTICE, WARNING, ALERT
-      message: string;
-    };
-    buttons?: {
-      btnLocation?: ChatTemplateButtonLocationType; // LEFT, RIGHT
-      text: string;
-    }[];
-    files?: {
-      originalName: string;
-      fileId: string;
-      size: number;
-    }[];
-    links?: {
-      title: string;
-      url: string;
-    }[];
-  };
+  systemMessage?: SystemMessageDto | null;
+
+  // {
+  //   title: string;
+  //   content: string;
+  //   notice?: {
+  //     type: ChatTemplateNoticeType; // NOTICE, WARNING, ALERT
+  //     message: string;
+  //   };
+  //   buttons?: {
+  //     btnLocation?: ChatTemplateButtonLocationType; // LEFT, RIGHT
+  //     text: string;
+  //   }[];
+  //   files?: {
+  //     originalName: string;
+  //     fileId: string;
+  //     size: number;
+  //   }[];
+  //   links?: {
+  //     title: string;
+  //     url: string;
+  //   }[];
+  // };
 
   @IsEnum(UserRole)
   @IsNotEmpty()
@@ -150,16 +146,16 @@ export class ChatMessages extends ValidationEntity {
 
   static newMessage(params: {
     chatRoomId: string;
-    templateId?: string;
     message?: string;
+    systemMessage?: SystemMessageDto;
     type: ChatMessageType;
     senderType: UserRole;
     senderId: string;
   }) {
     const entity = new ChatMessages();
     entity.chatRoom = { id: params.chatRoomId } as ChatRooms;
-    entity.templateId = params.templateId ?? null;
     entity.message = params.message ?? null;
+    entity.systemMessage = params.systemMessage ?? null;
     entity.type = params.type;
     entity.senderType = params.senderType;
     entity.senderId = params.senderId;
