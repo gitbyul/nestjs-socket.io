@@ -7,9 +7,6 @@ import { AuthModule } from '../auth/auth.module';
 import { FileRepository } from './repository/file.repository';
 import { Files } from './entity/Files.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { APP_GUARD } from '@nestjs/core';
-import { HttpAuthGuard } from '../auth/guard/http-auth.guard';
-import { RbacGuard } from '../auth/guard/rbac.guard';
 import { ChatModule } from '../chat/chat.module';
 
 @Module({
@@ -19,20 +16,8 @@ import { ChatModule } from '../chat/chat.module';
     forwardRef(() => ChatModule),
     TypeOrmModule.forFeature([Files]),
   ],
-  providers: [
-    FileService,
-    ChatS3Service,
-    FileRepository,
-    {
-      provide: APP_GUARD,
-      useClass: HttpAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RbacGuard,
-    },
-  ],
+  providers: [FileService, ChatS3Service, FileRepository],
   controllers: [FileController],
-  exports: [FileRepository],
+  exports: [FileRepository, FileService],
 })
 export class FileModule {}

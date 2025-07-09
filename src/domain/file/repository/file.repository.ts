@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Files } from '../entity/Files.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FileRelatedTable } from '../enums/file-releated-table.enums';
 
@@ -29,14 +29,37 @@ export class FileRepository {
    * @param fileId 파일 ID
    * @returns 파일 정보
    */
-  async getFile(dto: { fileId: string }) {
+  async findByFileId(dto: { fileId: string }) {
     return await this.fileRepository.findOne({
       where: {
         id: dto.fileId,
       },
     });
   }
-  async getFileWithTransaction(
+  async findByFileIdWithTransaction(
+    manager: EntityManager,
+    dto: { fileId: string },
+  ) {
+    return await manager.findOne(Files, {
+      where: {
+        id: dto.fileId,
+      },
+    });
+  }
+
+  /**
+   * 파일 목록 조회
+   * @param fileIds 파일 ID 목록
+   * @returns 파일 목록
+   */
+  async findByFileIdIn(dto: { fileIds: string[] }) {
+    return await this.fileRepository.find({
+      where: {
+        id: In(dto.fileIds),
+      },
+    });
+  }
+  async findByFileIdInWithTransaction(
     manager: EntityManager,
     dto: { fileId: string },
   ) {
@@ -52,7 +75,9 @@ export class FileRepository {
    * @param fileId 파일 ID
    * @returns 파일 정보
    */
-  async getFileByFileId(dto: { fileId: string }): Promise<Files | null> {
+  async getFileByFileIdAndRelatedTableChat(dto: {
+    fileId: string;
+  }): Promise<Files | null> {
     return await this.fileRepository.findOne({
       where: {
         id: dto.fileId,
@@ -67,7 +92,7 @@ export class FileRepository {
    * @param chatMessageId chat message ID
    * @returns 연결된 파일 목록
    */
-  async getFileListByChatMessage(dto: {
+  async getFileListByChatMessageIdAndRelatedTableChat(dto: {
     chatMessageId: string;
   }): Promise<Files[]> {
     return await this.fileRepository.find({
@@ -81,7 +106,7 @@ export class FileRepository {
       },
     });
   }
-  async getFileListByChatMessageWithTransaction(
+  async getFileListByChatMessageIdAndRelatedTableChatWithTransaction(
     manager: EntityManager,
     dto: { chatMessageId: string },
   ): Promise<Files[]> {

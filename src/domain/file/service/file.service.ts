@@ -59,7 +59,9 @@ export class FileService {
     chatRoomId: string,
   ): Promise<void> {
     // 파일 엔티티 조회
-    const file = await this.fileRepository.getFileByFileId({ fileId });
+    const file = await this.fileRepository.getFileByFileIdAndRelatedTableChat({
+      fileId,
+    });
     if (!file) {
       throw new NotFoundException(`[${fileId}] File not found`);
     }
@@ -96,7 +98,11 @@ export class FileService {
   async getS3FileWithWebStreamAndFileEntity(fileId: string) {
     try {
       // 1. 파일 엔티티 조회
-      const file = await this.fileRepository.getFileByFileId({ fileId });
+      const file = await this.fileRepository.getFileByFileIdAndRelatedTableChat(
+        {
+          fileId,
+        },
+      );
       if (!file) {
         throw new NotFoundException(`[${fileId}] File not found`);
       }

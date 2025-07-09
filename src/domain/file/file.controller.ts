@@ -9,6 +9,7 @@ import {
   Req,
   Res,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import {
@@ -37,6 +38,8 @@ import { AuthRequest } from '../auth/interface/auth-request.interface';
 import { ChatEventEmitter } from '../event/enums/event-emitter-type.enum';
 import { UserRole } from '../auth/enums/user-role.enum';
 import { LogHttpInterceptor } from 'src/config/log/log-http.interceptor';
+import { HttpAuthGuard } from '../auth/guard/http-auth.guard';
+import { RbacGuard } from '../auth/guard/rbac.guard';
 
 @Controller('file')
 @ApiBearerAuth()
@@ -51,6 +54,7 @@ export class FileController {
 
   @Post('chat/upload')
   @RBAC([UserRole.ADMIN, UserRole.ADVERTISER, UserRole.AUTHOR])
+  @UseGuards(HttpAuthGuard, RbacGuard)
   @UseInterceptors(FileInterceptor('file'), LogFileInterceptor)
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
@@ -112,6 +116,7 @@ export class FileController {
 
   @Get('/chat/download')
   @RBAC([UserRole.ADMIN, UserRole.ADVERTISER, UserRole.AUTHOR])
+  @UseGuards(HttpAuthGuard, RbacGuard)
   @UseInterceptors(LogHttpInterceptor)
   @ApiOperation({
     summary: '채팅 파일 다운로드',
