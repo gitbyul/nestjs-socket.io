@@ -4,13 +4,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatRooms } from './entity/ChatRooms.entity';
 import { ChatMessages } from './entity/ChatMessages.entity';
 import { ChatRoomMembers } from './entity/ChatRoomMembers.entity';
-import { ChatTemplates } from './entity/ChatTemplates.entity';
 import { ChatConnectedUsers } from './entity/ChatConnectedUsers.entity';
 
 import { ChatRoomRepository } from './repository/chat-room.repository';
 import { ChatRoomMemberRepository } from './repository/chat-room-member.repository';
 import { ChatMessageRepository } from './repository/chat-message.repository';
-import { ChatTemplateRepository } from './repository/chat-templates.repository';
 import { ChatConnectionRepository } from './repository/chat-connection.repository';
 import { ChatService } from './servcie/chat.service';
 import { SocketEmitService } from './servcie/socket-emit.service';
@@ -22,6 +20,10 @@ import { UserModule } from '../user/user.module';
 import { FileModule } from '../file/file.module';
 
 import { SocketHelperController } from './socket-helper.controller';
+import { AdProposalsModule } from '../adproposals/adproposals.module';
+import { ChatTemplates } from './entity/ChatTemplates.entity';
+import { ChatTemplateRepository } from './repository/chat-templates.repository';
+import { ChatTemplateService } from './servcie/chat-template.service';
 
 @Module({
   imports: [
@@ -31,27 +33,32 @@ import { SocketHelperController } from './socket-helper.controller';
       ChatRooms,
       ChatMessages,
       ChatRoomMembers,
-      ChatTemplates,
       ChatConnectedUsers,
+      ChatTemplates,
     ]),
     UserModule,
+    AdProposalsModule,
     forwardRef(() => FileModule),
   ],
   providers: [
     ChatGateway,
     ChatService,
+    SocketEmitService,
+    ChatTemplateService,
     ChatRoomRepository,
     ChatRoomMemberRepository,
     ChatMessageRepository,
-    ChatTemplateRepository,
     ChatConnectionRepository,
-    SocketEmitService,
+    ChatTemplateRepository,
   ],
   controllers: [SocketHelperController],
   exports: [
     ChatService,
+    ChatRoomRepository,
     ChatRoomMemberRepository,
     ChatMessageRepository,
+    ChatTemplateRepository,
+    ChatTemplateService,
     SocketEmitService,
   ],
 })

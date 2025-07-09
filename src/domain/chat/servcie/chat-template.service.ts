@@ -2,8 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { Author } from 'src/domain/user/entity/Author.entity';
 import { Advertisers } from 'src/domain/user/entity/Advertisers.entity';
 import { ChatTemplateCode } from '../enums/chat-template-code';
-import { SystemMessageDto } from '../dto/system-message.dto';
+import { SystemMessageDto } from '../../system-message/dto/system-message.dto';
 import { ChatTemplateRepository } from '../repository/chat-templates.repository';
+import { AdProposals } from 'src/domain/adproposals/entity/AdProposals.entity';
+import { ChatTemplates } from '../entity/ChatTemplates.entity';
+import {
+  ChatTemplateButtonLocationEnum,
+  ChatTemplateNoticeType,
+} from '../enums/chat-template-item-type';
+import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 
 @Injectable()
 export class ChatTemplateService {
@@ -11,9 +18,34 @@ export class ChatTemplateService {
     private readonly chatTemplateRepository: ChatTemplateRepository,
   ) {}
   async initTemplate(templateCode: ChatTemplateCode) {
-    const template =
-      await this.chatTemplateRepository.findTemplateByCode(templateCode);
-    return template;
+    const templates =
+      await this.chatTemplateRepository.findByCode(templateCode);
+    return templates;
+  }
+
+  /**
+   * 템플릿 발신자 초기화
+   * @param systemMessageDto 채팅 템플릿
+   * @param templateCode 템플릿 코드
+   * @returns 채팅 템플릿
+   */
+  initSender(
+    templateCode: ChatTemplateCode,
+    author: Author,
+    advertiser: Advertisers,
+  ) {
+    const senderType = templateCode.split('_')[0] as UserRole;
+    let senderId: string | null = null;
+
+    if (senderType === UserRole.AUTHOR) {
+      senderId = author.id;
+    } else if (senderType === UserRole.ADVERTISER) {
+      senderId = advertiser.id;
+    }
+    return {
+      senderType,
+      senderId,
+    };
   }
 
   /**
@@ -25,9 +57,14 @@ export class ChatTemplateService {
    */
   initTitle(
     systemMessageDto: SystemMessageDto,
+    adProposal: AdProposals,
     author: Author,
     advertiser: Advertisers,
   ) {
+    systemMessageDto.title = systemMessageDto.title.replace(
+      '[광고명]',
+      adProposal.title,
+    );
     systemMessageDto.title = systemMessageDto.title.replace(
       '[회사명]',
       advertiser.bizName,
@@ -72,11 +109,17 @@ export class ChatTemplateService {
    */
   async initNotice(
     systemMessageDto: SystemMessageDto,
-    templateCode: ChatTemplateCode,
+    noticeTemplate?: ChatTemplates,
   ) {
-    const noticeTemplate =
-      await this.chatTemplateRepository.findNoticeByCode(templateCode);
-    console.log(noticeTemplate);
+    if (!noticeTemplate) {
+      return systemMessageDto;
+    }
+
+    systemMessageDto.notice = {
+      type: noticeTemplate.actionType as ChatTemplateNoticeType,
+      message: noticeTemplate.content,
+    };
+
     return systemMessageDto;
   }
 
@@ -88,11 +131,21 @@ export class ChatTemplateService {
    */
   async initButtons(
     systemMessageDto: SystemMessageDto,
-    templateCode: ChatTemplateCode,
+    buttonTemplate?: ChatTemplates[],
   ) {
-    const buttonTemplate =
-      await this.chatTemplateRepository.findButtonByCode(templateCode);
-    console.log(buttonTemplate);
+    if (!buttonTemplate || buttonTemplate.length === 0) {
+      return systemMessageDto;
+    }
+    systemMessageDto.buttons = [];
+    buttonTemplate.forEach((button) => {
+      const buttonItem = {
+        btnLocation: button.actionType as ChatTemplateButtonLocationEnum,
+        text: button.content,
+        url: button.url ?? undefined,
+      };
+      systemMessageDto.buttons?.push(buttonItem);
+    });
+
     return systemMessageDto;
   }
 

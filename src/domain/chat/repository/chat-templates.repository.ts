@@ -18,10 +18,8 @@ export class ChatTemplateRepository {
    * @param templateCode 템플릿 코드
    * @returns 템플릿
    */
-  async findByCode(
-    templateCode: ChatTemplateCode,
-  ): Promise<ChatTemplates | null> {
-    return await this.chatTemplatesRepository.findOne({
+  async findByCode(templateCode: ChatTemplateCode): Promise<ChatTemplates[]> {
+    return await this.chatTemplatesRepository.find({
       where: { code: templateCode },
     });
   }

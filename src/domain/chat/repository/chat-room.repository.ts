@@ -90,6 +90,23 @@ export class ChatRoomRepository {
   }
 
   /**
+   * 채팅방 조회
+   * @param chatRoomId 채팅방 ID
+   * @returns 채팅방
+   */
+  async getChatRoomById(chatRoomId: string) {
+    return await this.chatRoomsRepository.findOneByOrFail({ id: chatRoomId });
+  }
+  async getChatRoomByIdWithTransaction(
+    manager: EntityManager,
+    chatRoomId: string,
+  ) {
+    return await manager.findOne(ChatRooms, {
+      where: { id: chatRoomId },
+    });
+  }
+
+  /**
    * 채팅방 조회 (멤버 포함)
    * @param chatRoomId 채팅방 ID
    * @param userId 사용자 ID

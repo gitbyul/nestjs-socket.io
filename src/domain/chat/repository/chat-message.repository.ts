@@ -16,7 +16,6 @@ export class ChatMessageRepository {
   /**
    * 메시지 저장
    * @param chatRoomId - 채팅방 ID
-   * @param templateId - 템플릿 ID
    * @param message - 메시지
    * @param type - 메시지 타입
    * @param senderType - 발신자 타입
@@ -27,17 +26,17 @@ export class ChatMessageRepository {
     manager: EntityManager,
     messageData: {
       chatRoomId: string;
-      templateId?: string;
       message?: string;
       type: ChatMessageType;
       senderType: UserRole;
       senderId: string;
+      systemMessage?: any;
     },
   ) {
     const entity = ChatMessages.newMessage({
       chatRoomId: messageData.chatRoomId,
-      templateId: messageData.templateId ?? undefined,
       message: messageData.message ?? undefined,
+      systemMessage: messageData.systemMessage ?? undefined,
       type: messageData.type,
       senderType: messageData.senderType,
       senderId: messageData.senderId,

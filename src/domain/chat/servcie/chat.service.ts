@@ -28,6 +28,7 @@ import { ChatRoomMemberReadMessageOrderInvalidException } from 'src/config/excep
 import { ChatRoomMemberReadMessageSameIdException } from 'src/config/exception/chat-room-member-read-message-same-id.exception';
 import { FileRepository } from 'src/domain/file/repository/file.repository';
 import { FileNotFoundException } from 'src/config/exception/file-not-found.exception';
+import { SystemMessageDto } from 'src/domain/system-message/dto/system-message.dto';
 
 @Injectable()
 export class ChatService {
@@ -272,7 +273,6 @@ export class ChatService {
         const chatMessage =
           await this.chatMessageRepository.createWithTransaction(manager, {
             chatRoomId: body.chatRoomId,
-            templateId: body.templateId ?? undefined,
             message: body.message,
             type: ChatMessageType.TEXT,
             senderType: user.userRole,
@@ -530,12 +530,10 @@ export class ChatService {
         }
 
         // 4. 파일 조회
-        const fileEntity = await this.fileRepository.getFileWithTransaction(
-          manager,
-          {
+        const fileEntity =
+          await this.fileRepository.findByFileIdWithTransaction(manager, {
             fileId: body.fileId,
-          },
-        );
+          });
         if (!fileEntity) {
           throw new FileNotFoundException(body.fileId);
         }
@@ -566,7 +564,7 @@ export class ChatService {
           },
         );
 
-        // 8. 채팅방 멤버 상태값 업데이트
+        // 8. 채팅방 멤버(Sender) 상태값 업데이트
         await this.chatRoomMemberRepository.updateLastReadMessageWithTransaction(
           manager,
           {
@@ -639,6 +637,96 @@ export class ChatService {
         throw error;
       }
     });
+  }
+
+  /**
+   * 시스템 메시지 전송
+   * @param user 사용자 정보
+   * @param chatRoomId 채팅방 ID
+   * @param systemMessage 시스템 메시지
+   * @returns 시스템 메시지 전송 성공 정보
+   */
+  async sendSystemMessage(
+    user: { userId: string; userRole: UserRole },
+    body: { chatRoomId: string; systemMessage: SystemMessageDto },
+  ) {
+    try {
+      return this.dataSource.transaction(async (manager) => {
+        // 1. 채팅방 조회
+        const chatRoom =
+          await this.chatRoomRepository.getChatRoomWithTransaction(manager, {
+            chatRoomId: body.chatRoomId,
+            userId: user.userId,
+          });
+        if (!chatRoom) {
+          throw new ChatRoomNotFoundException(body.chatRoomId);
+        }
+
+        // 2. 시스템 메시지 저장
+        const chatMessage =
+          await this.chatMessageRepository.createWithTransaction(manager, {
+            chatRoomId: body.chatRoomId,
+            type: ChatMessageType.SYSTEM,
+            senderType: user.userRole,
+            senderId: user.userId,
+            systemMessage: body.systemMessage,
+          });
+
+        // 3. 채팅방 마지막 메세지 업데이트
+        await this.chatRoomRepository.updateLastMessageWithTransaction(
+          manager,
+          {
+            chatRoomId: body.chatRoomId,
+            message: body.systemMessage.title,
+            senderType: user.userRole,
+            senderId: user.userId,
+          },
+        );
+
+        // 4. 채팅방 멤버 목록 조회
+        const chatRoomMemberList =
+          await this.chatRoomMemberRepository.getChatRoomMemberList(
+            chatRoom.id,
+          );
+
+        // 5. 채팅방 멤버 목록 순회
+        const unreadChatRoomMemberList = chatRoomMemberList.filter(
+          (chatRoomMember) => chatRoomMember.memberId !== user.userId,
+        );
+        for (const chatRoomMember of unreadChatRoomMemberList) {
+          // 6. 채팅방 멤버 읽지 않은 메시지 수 업데이트
+          await this.chatRoomMemberRepository.updateUnreadMessageCountWithTransaction(
+            manager,
+            {
+              chatRoomId: chatRoom.id,
+              memberId: chatRoomMember.memberId,
+            },
+          );
+        }
+
+        // 7. 채팅 멤버, SocketId 데이터 병합
+        const unreadCountMemberList = unreadChatRoomMemberList.map(
+          (chatRoomMember) => {
+            const connectionInfo = this.getUserConnectionInfo(
+              chatRoomMember.memberId,
+            );
+            const socketId = connectionInfo?.socketId;
+            return {
+              chatRoomId: chatRoom.id,
+              socketId: socketId,
+              memberId: chatRoomMember.memberId,
+              unreadCount: chatRoomMember.unreadMessageCount + 1,
+              createdAt: chatMessage.createdAt,
+            };
+          },
+        );
+      });
+    } catch (error) {
+      this.logUtil.error(
+        `[ChatService][sendSystemMessage] sendSystemMessage failed: ${error}`,
+      );
+      throw error;
+    }
   }
 
   /**
