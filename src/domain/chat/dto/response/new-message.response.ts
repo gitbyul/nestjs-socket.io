@@ -1,6 +1,7 @@
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 import { ChatMessageType } from '../../enums/chat-message-type.enum';
 import { ApiProperty } from '@nestjs/swagger';
+import { SystemMessageDto } from 'src/domain/system-message/dto/system-message.dto';
 
 export class NewMessageResponseDto {
   @ApiProperty({
@@ -29,6 +30,40 @@ export class NewMessageResponseDto {
     },
   })
   message: { messageId: string; message?: string };
+
+  @ApiProperty({
+    description: '시스템 메시지',
+    type: SystemMessageDto,
+    required: false,
+    example: {
+      title: 'Hello, world!',
+      content: 'Hello, world!',
+      notice: {
+        type: 'NOTICE',
+        message: 'Hello, world!',
+      },
+      buttons: [
+        {
+          text: 'Hello, world!',
+          url: 'https://example.com/test.png',
+        },
+      ],
+      links: [
+        {
+          title: 'Hello, world!',
+          url: 'https://example.com/test.png',
+        },
+      ],
+      files: [
+        {
+          originalName: 'test.png',
+          fileId: '123e4567-e89b-12d3-a456-426614174000',
+          size: 100,
+        },
+      ],
+    },
+  })
+  systemMessage?: SystemMessageDto;
 
   @ApiProperty({
     description: '파일',

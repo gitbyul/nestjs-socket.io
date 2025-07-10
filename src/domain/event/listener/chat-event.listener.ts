@@ -86,6 +86,7 @@ export class ChatEventListener implements OnModuleInit {
       );
     } catch (error) {
       let errorCode = EventErrorCode.INTERNAL_ERROR;
+      const errorMessage = error.message ?? error;
       switch (error.constructor) {
         case UserNotFoundException:
           errorCode = EventErrorCode.USER_NOT_FOUND;
@@ -98,19 +99,34 @@ export class ChatEventListener implements OnModuleInit {
           break;
       }
       if (socket) {
-        this.socketEmitService.sendMessageFailed(socket, errorCode, error);
+        this.socketEmitService.sendMessageFailed(
+          socket,
+          errorCode,
+          errorMessage,
+        );
       }
       this.logUtil.EventError(
-        `[${ChatEventEmitter.SEND_FILE_MESSAGE}][${payload.eventId}]Event failed : ${error.message}`,
+        `[${ChatEventEmitter.SEND_FILE_MESSAGE}][${payload.eventId}]Event failed : ${errorMessage}`,
       );
     }
   }
 
+  /**
+   * 시스템 메시지 전송 이벤트 처리
+   * @param payload 시스템 메시지 전송 이벤트 페이로드
+   * @event chat.event.send-system-message
+   * @websocketListener send-message-success 시스템 메시지 전송 성공
+   * @websocketListener new-message 새 시스템 메시지 수신
+   * @websocketListener unread-count-updated 읽지 않은 메시지 수 업데이트
+   * @websocketListener send-message-failed 시스템 메시지 전송 실패
+   */
   @OnEvent(ChatEventEmitter.SEND_SYSTEM_MESSAGE)
   async handleSystemMessage(payload: SendSystemMessageRequestDto) {
     this.logUtil.EventInfo(
       `[${payload.eventId}]Event received: ${JSON.stringify(payload)}`,
     );
+
+    const socket = this.chatService.getUserConnectionSocket(payload.senderId);
 
     try {
       const userInfo = {
@@ -122,8 +138,36 @@ export class ChatEventListener implements OnModuleInit {
         systemMessage: payload.systemMessage,
       };
       // 1. 시스템 메시지 저장
-      await this.chatService.sendSystemMessage(userInfo, body);
+      const {
+        chatRoomId,
+        message,
+        systemMessage,
+        type,
+        createdAt,
+        unreadCountMemberList,
+      } = await this.chatService.sendSystemMessage(userInfo, body);
 
+      // 2. 소켓 이벤트 발송
+      if (socket) {
+        const dto = { chatRoomId, message, systemMessage, type, createdAt };
+        // 2.1 메시지 전송 성공 이벤트 발송
+        this.socketEmitService.sendMessageSuccess(socket, dto);
+        // 2.2 새 메시지 이벤트 발송
+        this.socketEmitService.newMessage(socket, userInfo, dto);
+        // 2.3 읽지 않은 메시지 수 업데이트 이벤트 발송
+        for (const unreadCountMember of unreadCountMemberList) {
+          const { socketId, unreadCount, createdAt } = unreadCountMember;
+
+          if (!socketId) {
+            continue;
+          }
+          this.socketEmitService.unreadCountUpdated(socket, socketId, {
+            chatRoomId,
+            unreadCount,
+            updatedAt: createdAt,
+          });
+        }
+      }
       this.logUtil.EventInfo(
         `[${ChatEventEmitter.SEND_SYSTEM_MESSAGE}][${payload.eventId}]Event completed : ${JSON.stringify(payload)}`,
       );
@@ -140,6 +184,13 @@ export class ChatEventListener implements OnModuleInit {
         case SocketNotFoundException:
           errorCode = EventErrorCode.INTERNAL_ERROR;
           break;
+      }
+      if (socket) {
+        this.socketEmitService.sendMessageFailed(
+          socket,
+          errorCode,
+          errorMessage,
+        );
       }
       this.logUtil.EventError(
         `[${ChatEventEmitter.SEND_SYSTEM_MESSAGE}][${payload.eventId}]Event failed : ${errorMessage}`,

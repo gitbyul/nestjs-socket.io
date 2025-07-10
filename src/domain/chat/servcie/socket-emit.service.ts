@@ -13,6 +13,7 @@ import {
 } from '../enums/chat-event-type.enum';
 import { IChatEventResponse } from '../interface/chat-event-response.interface';
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
+import { SystemMessageDto } from 'src/domain/system-message/dto/system-message.dto';
 
 @Injectable()
 export class SocketEmitService {
@@ -206,6 +207,7 @@ export class SocketEmitService {
     message: {
       chatRoomId: string;
       message: { messageId: string; message?: string };
+      systemMessage?: SystemMessageDto;
       file?: {
         fileId: string;
         originalFilename: string;
@@ -224,6 +226,7 @@ export class SocketEmitService {
       senderType: sender.userRole,
       chatRoomId: message.chatRoomId,
       message: message.message,
+      systemMessage: message.systemMessage,
       file: message.file,
       type: message.type,
       createdAt: message.createdAt,

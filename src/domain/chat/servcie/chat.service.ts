@@ -720,6 +720,17 @@ export class ChatService {
             };
           },
         );
+
+        return {
+          chatRoomId: chatRoom.id,
+          message: {
+            messageId: chatMessage.id,
+          },
+          systemMessage: body.systemMessage,
+          type: ChatMessageType.SYSTEM,
+          createdAt: new Date(),
+          unreadCountMemberList,
+        };
       });
     } catch (error) {
       this.logUtil.error(
