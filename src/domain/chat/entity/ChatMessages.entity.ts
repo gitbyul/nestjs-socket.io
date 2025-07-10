@@ -11,7 +11,6 @@ import {
 import {
   IsDate,
   IsEnum,
-  IsJSON,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -27,10 +26,6 @@ import { ChatMessageType } from 'src/domain/chat/enums/chat-message-type.enum';
 import { ValidationEntity } from 'src/config/entity/Validation.entity';
 import { ChatRooms } from './ChatRooms.entity';
 import { Files } from 'src/domain/file/entity/Files.entity';
-import {
-  ChatTemplateButtonLocationType,
-  ChatTemplateNoticeType,
-} from 'src/domain/chat/enums/chat-template-item-type';
 import { SystemMessageDto } from 'src/domain/system-message/dto/system-message.dto';
 
 @Entity({ name: 'chat_messages' })

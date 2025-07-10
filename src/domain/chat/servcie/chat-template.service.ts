@@ -107,7 +107,7 @@ export class ChatTemplateService {
    * @param templateCode 템플릿 코드
    * @returns 채팅 템플릿
    */
-  async initNotice(
+  initNotice(
     systemMessageDto: SystemMessageDto,
     noticeTemplate?: ChatTemplates,
   ) {
@@ -129,7 +129,7 @@ export class ChatTemplateService {
    * @param templateCode 템플릿 코드
    * @returns 채팅 템플릿
    */
-  async initButtons(
+  initButtons(
     systemMessageDto: SystemMessageDto,
     buttonTemplate?: ChatTemplates[],
   ) {

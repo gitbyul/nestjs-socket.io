@@ -1,10 +1,5 @@
-import { Body, Controller, Get, Post, UseInterceptors } from '@nestjs/common';
-import {
-  ApiConsumes,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Body, Controller, Post, UseInterceptors } from '@nestjs/common';
+import { ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ResponseEntity } from 'src/config/entity/Response.entity';
 import { SystemMessageService } from './service/system-message.service';
 import { SystemMessageRequestDto } from './request/system-message.request';
