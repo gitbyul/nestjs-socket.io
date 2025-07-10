@@ -12,7 +12,6 @@ import { FileRepository } from 'src/domain/file/repository/file.repository';
 import { ChatTemplateType } from '../../chat/enums/chat-template-item-type';
 import { ChatMessageRepository } from 'src/domain/chat/repository/chat-message.repository';
 import { AdProposalService } from 'src/domain/adproposals/service/ad-proposal.service';
-import { AdProposals } from 'src/domain/adproposals/entity/AdProposals.entity';
 
 @Injectable()
 export class SystemMessageService {
@@ -112,7 +111,7 @@ export class SystemMessageService {
     // 템플릿 제목 초기화 (Title)
     systemMessageDto = this.chatTemplateService.initTitle(
       systemMessageDto,
-      adProposal as AdProposals,
+      adProposal,
       authorMember as Author,
       advertiserMember as Advertisers,
     );
@@ -125,13 +124,13 @@ export class SystemMessageService {
     );
 
     // 템플릿 공지 초기화 (Notice)
-    systemMessageDto = await this.chatTemplateService.initNotice(
+    systemMessageDto = this.chatTemplateService.initNotice(
       systemMessageDto,
       noticeTemplate,
     );
 
     // 템플릿 버튼 초기화 (Buttons)
-    systemMessageDto = await this.chatTemplateService.initButtons(
+    systemMessageDto = this.chatTemplateService.initButtons(
       systemMessageDto,
       buttonTemplate,
     );

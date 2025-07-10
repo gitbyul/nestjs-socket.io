@@ -68,7 +68,7 @@ export class ChatMessages extends ValidationEntity {
     comment: '시스템 메시지',
     transformer: {
       to: (value: SystemMessageDto) => JSON.stringify(value),
-      from: (value: string) => JSON.parse(value),
+      from: (value: string) => JSON.parse(value) as SystemMessageDto | null,
     },
   })
   systemMessage?: SystemMessageDto | null;
