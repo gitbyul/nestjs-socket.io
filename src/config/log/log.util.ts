@@ -65,6 +65,23 @@ export class LogUtil {
     this.logger.error(`[Event][${className}][${handlerName}]${text}`);
   }
 
+  SchedulingInfo(text: string) {
+    const { className, handlerName } = this.getClassNameAndHandlerName();
+    this.logger.info(`[Scheduling][${className}][${handlerName}][Info]${text}`);
+  }
+  SchedulingSuccess(text: string) {
+    const { className, handlerName } = this.getClassNameAndHandlerName();
+    this.logger.info(
+      `[Scheduling][${className}][${handlerName}][Success]${text}`,
+    );
+  }
+  SchedulingError(text: string) {
+    const { className, handlerName } = this.getClassNameAndHandlerName();
+    this.logger.error(
+      `[Scheduling][${className}][${handlerName}][Failed]${text}`,
+    );
+  }
+
   // 색상 코드가 제거된 로그 메서드들
   // TODO: 추후 사용 필요성 확인 되면 그때 사용
   infoClean(text: string) {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, LessThan, Repository } from 'typeorm';
 
 import { ChatRooms } from '../entity/ChatRooms.entity';
 
@@ -13,6 +13,29 @@ export class ChatRoomRepository {
     @InjectRepository(ChatRooms)
     private chatRoomsRepository: Repository<ChatRooms>,
   ) {}
+
+  /**
+   * 채팅방 비활성화 예약 시간이 지난 채팅방 목록 조회
+   * @returns 채팅방 목록
+   */
+  async getChatRoomListByDeactivationScheduledAt() {
+    const chatRooms = await this.chatRoomsRepository.find({
+      where: {
+        alive: true,
+        deactivationScheduledAt: LessThan(new Date()),
+      },
+    });
+    return chatRooms;
+  }
+
+  /**
+   * 채팅방 업데이트
+   * @param chatRoomId 채팅방 ID
+   * @param dto 업데이트 내용
+   */
+  async updateChatRoom(chatRoomId: string, dto: Partial<ChatRooms>) {
+    await this.chatRoomsRepository.update(chatRoomId, dto);
+  }
 
   /**
    * 채팅방 목록 조회

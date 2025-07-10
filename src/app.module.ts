@@ -14,6 +14,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { EventModule } from './domain/event/event.module';
 import { SystemMessageModule } from './domain/system-message/system-message.module';
+import { SchedulingModule } from './domain/scheduling/scheduling.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { SystemMessageModule } from './domain/system-message/system-message.modu
     SystemMessageModule,
     FileModule,
     EventModule,
+    SchedulingModule,
   ],
   controllers: [AppController],
   providers: [
