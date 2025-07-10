@@ -1,0 +1,113 @@
+name: Deploy to Development Environment
+
+# 트리거 조건: develop 브랜치에 push될 때
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+# 환경 설정
+env:
+  NODE_VERSION: '22'
+  DOCKER_IMAGE: krow-chat-server-dev
+  ENV: dev
+  NODE_ENV: dev
+
+jobs:
+  # 코드 품질 검사
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test
+
+  # Docker 이미지 빌드 및 배포
+  deploy:
+    needs: code-quality # code-quality 작업 완료 후 실행
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set short git commit SHA
+        id: vars
+        run: |
+          calculatedSha=$(git rev-parse --short ${{ github.sha }})
+          echo "short_sha=$calculatedSha" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image to Docker Hub
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.short_sha }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST_DEV }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          script: |
+            # 배포 시작 로그
+            echo "Starting deployment for commit: ${{ github.sha }}"
+
+            # 기존 컨테이너 중지 및 제거
+            sudo docker stop chat-server-dev || true
+            sudo docker rm chat-server-dev || true
+
+            # Docker 이미지 로드 (아티팩트에서)
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.short_sha }}
+
+            # 새 컨테이너 실행
+            sudo docker run -d \
+              --name chat-server-dev \
+              --restart unless-stopped \
+              -p 4000:4000 \
+              -v /var/log/chat-server:/app/log \
+              --user 1001:1001 \
+              -e ENV=${{ env.ENV }} \
+              -e NODE_ENV=${{ env.NODE_ENV }} \
+              -e DB_TYPE=${{ secrets.DB_TYPE_DEV }} \
+              -e DB_HOST=${{ secrets.DB_HOST_DEV }} \
+              -e DB_PORT=${{ secrets.DB_PORT_DEV }} \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME_DEV }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD_DEV }} \
+              -e DB_DATABASE=${{ secrets.DB_NAME_DEV }} \
+              -e ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }} \
+              -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+              -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+              -e AWS_REGION=${{ secrets.AWS_REGION }} \
+              -e AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }} \
+              ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.short_sha }}
