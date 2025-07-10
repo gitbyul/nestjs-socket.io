@@ -10,6 +10,7 @@ import { ChatRoomNotFoundException } from 'src/config/exception/chat-room-not-fo
 import { UserNotFoundException } from 'src/config/exception/user-not-found.exception';
 import { SocketNotFoundException } from 'src/config/exception/socket-not-found.exception';
 import { SendSystemMessageRequestDto } from '../request/system-message.request';
+import { ChatRoomNotAliveException } from 'src/config/exception/chat-room-not-alive.exception';
 
 @Injectable()
 export class ChatEventListener implements OnModuleInit {
@@ -93,6 +94,9 @@ export class ChatEventListener implements OnModuleInit {
           break;
         case ChatRoomNotFoundException:
           errorCode = EventErrorCode.CHAT_ROOM_NOT_FOUND;
+          break;
+        case ChatRoomNotAliveException:
+          errorCode = EventErrorCode.CHAT_ROOM_NOT_ALIVE;
           break;
         case SocketNotFoundException:
           errorCode = EventErrorCode.INTERNAL_ERROR;
@@ -180,6 +184,9 @@ export class ChatEventListener implements OnModuleInit {
           break;
         case ChatRoomNotFoundException:
           errorCode = EventErrorCode.CHAT_ROOM_NOT_FOUND;
+          break;
+        case ChatRoomNotAliveException:
+          errorCode = EventErrorCode.CHAT_ROOM_NOT_ALIVE;
           break;
         case SocketNotFoundException:
           errorCode = EventErrorCode.INTERNAL_ERROR;

@@ -29,6 +29,7 @@ import { ChatRoomMemberReadMessageSameIdException } from 'src/config/exception/c
 import { FileRepository } from 'src/domain/file/repository/file.repository';
 import { FileNotFoundException } from 'src/config/exception/file-not-found.exception';
 import { SystemMessageDto } from 'src/domain/system-message/dto/system-message.dto';
+import { ChatRoomNotAliveException } from 'src/config/exception/chat-room-not-alive.exception';
 
 @Injectable()
 export class ChatService {
@@ -254,6 +255,9 @@ export class ChatService {
           });
         if (!chatRoom) {
           throw new ChatRoomNotFoundException(body.chatRoomId, user.userId);
+        }
+        if (!chatRoom.alive) {
+          throw new ChatRoomNotAliveException(body.chatRoomId, user.userId);
         }
 
         // 3. 채팅방 멤버 조회
@@ -515,6 +519,9 @@ export class ChatService {
         if (!chatRoom) {
           throw new ChatRoomNotFoundException(body.chatRoomId, user.userId);
         }
+        if (!chatRoom.alive) {
+          throw new ChatRoomNotAliveException(body.chatRoomId, user.userId);
+        }
 
         // 3. 채팅방 멤버 조회
         const chatRoomMember =
@@ -660,6 +667,9 @@ export class ChatService {
           });
         if (!chatRoom) {
           throw new ChatRoomNotFoundException(body.chatRoomId);
+        }
+        if (!chatRoom.alive) {
+          throw new ChatRoomNotAliveException(body.chatRoomId, user.userId);
         }
 
         // 2. 시스템 메시지 저장

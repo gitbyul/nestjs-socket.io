@@ -7,6 +7,7 @@ export enum EventErrorCode {
 
   // 채팅방 관련
   CHAT_ROOM_NOT_FOUND = 'CHAT_ROOM_NOT_FOUND', // 채팅방 조회 실패
+  CHAT_ROOM_NOT_ALIVE = 'CHAT_ROOM_NOT_ALIVE', // 채팅방 비활성화
 
   // 메시지 관련
   CHAT_MESSAGE_NOT_FOUND = 'CHAT_MESSAGE_NOT_FOUND', // 메시지 조회 실패

@@ -33,6 +33,7 @@ import { ChatMessageNotFoundException } from 'src/config/exception/chat-message-
 import { ChatRoomMemberReadMessageOrderInvalidException } from 'src/config/exception/chat-room-member-read-message-order-invalid.exception';
 import { ChatRoomMemberReadMessageSameIdException } from 'src/config/exception/chat-room-member-read-message-same-id.exception';
 import { LogWebSocketInterceptor } from 'src/config/log/log-ws.interceptor';
+import { ChatRoomNotAliveException } from 'src/config/exception/chat-room-not-alive.exception';
 
 @WebSocketGateway()
 @UseInterceptors(LogWebSocketInterceptor)
@@ -229,6 +230,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           break;
         case ChatRoomNotFoundException:
           errorCode = EventErrorCode.CHAT_ROOM_NOT_FOUND;
+          break;
+        case ChatRoomNotAliveException:
+          errorCode = EventErrorCode.CHAT_ROOM_NOT_ALIVE;
           break;
       }
       this.socketEmitService.sendMessageFailed(socket, errorCode, error);
