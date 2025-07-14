@@ -30,6 +30,9 @@ import { FileRepository } from 'src/domain/file/repository/file.repository';
 import { FileNotFoundException } from 'src/config/exception/file-not-found.exception';
 import { SystemMessageDto } from 'src/domain/system-message/dto/system-message.dto';
 import { ChatRoomNotAliveException } from 'src/config/exception/chat-room-not-alive.exception';
+import { GetChatRoomsSuccessResponseDto } from '../dto/response/get-chat-rooms-success.response';
+import { Advertisers } from 'src/domain/user/entity/Advertisers.entity';
+import { Author } from 'src/domain/user/entity/Author.entity';
 
 @Injectable()
 export class ChatService {
@@ -218,9 +221,47 @@ export class ChatService {
    * @returns 채팅방 목록
    */
   async getChatRoomListWithMember(userId: string) {
-    const chatRooms =
+    const response: GetChatRoomsSuccessResponseDto[] = [];
+
+    const chatRoomList =
       await this.chatRoomRepository.getChatRoomListWithMember(userId);
-    return chatRooms;
+    for (const chatRoom of chatRoomList) {
+      const lastMessageByRole = chatRoom.lastMessageByRole;
+      const lastMessageById = chatRoom.lastMessageById;
+
+      if (!lastMessageById || !lastMessageByRole) {
+        continue;
+      }
+
+      const lastMessageByUser = await this.userService.getUserById(
+        lastMessageById,
+        lastMessageByRole,
+      );
+
+      const lastMessageByUserInfo = {
+        id: lastMessageById,
+        role: lastMessageByRole,
+        name:
+          lastMessageByRole === UserRole.AUTHOR
+            ? (lastMessageByUser as Author).nickName
+            : (lastMessageByUser as Advertisers).bizName,
+        profileImage:
+          lastMessageByRole === UserRole.AUTHOR
+            ? (lastMessageByUser as Author).profileImage
+            : null,
+      };
+      const dto = new GetChatRoomsSuccessResponseDto();
+      dto.roomId = chatRoom.id;
+      dto.alive = chatRoom.alive;
+      dto.lastMessage = chatRoom.lastMessage;
+      dto.lastMessageAt = chatRoom.lastMessageAt;
+      dto.lastMessageUserInfo = lastMessageByUserInfo;
+      dto.createdAt = chatRoom.createdAt;
+      dto.updatedAt = chatRoom.updatedAt;
+      response.push(dto);
+    }
+
+    return response;
   }
 
   /**

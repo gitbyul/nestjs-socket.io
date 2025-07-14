@@ -34,7 +34,7 @@ export type EventPayloadMap = {
 
   // 채팅방 관련
   [EventChatRoom.GET_CHAT_ROOMS]: void;
-  [EventChatRoom.GET_CHAT_ROOMS_SUCCESS]: GetChatRoomsSuccessResponseDto;
+  [EventChatRoom.GET_CHAT_ROOMS_SUCCESS]: GetChatRoomsSuccessResponseDto[];
   [EventChatRoom.GET_CHAT_ROOMS_FAILED]: GetChatRoomsFailedResponseDto;
 
   // 메시지 관련

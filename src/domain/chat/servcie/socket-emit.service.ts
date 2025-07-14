@@ -3,7 +3,6 @@ import { Socket } from 'socket.io';
 import { EventErrorCode } from '../enums/chat-error-code.enum';
 import { EventPayloadMap } from '../type/event-payload.map';
 import { ConnectionStatus } from '../enums/connection-state.enum';
-import { ChatRooms } from '../entity/ChatRooms.entity';
 import { ChatMessageType } from '../enums/chat-message-type.enum';
 import {
   EventChatRoom,
@@ -14,6 +13,7 @@ import {
 import { IChatEventResponse } from '../interface/chat-event-response.interface';
 import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 import { SystemMessageDto } from 'src/domain/system-message/dto/system-message.dto';
+import { GetChatRoomsSuccessResponseDto } from '../dto/response/get-chat-rooms-success.response';
 
 @Injectable()
 export class SocketEmitService {
@@ -121,10 +121,12 @@ export class SocketEmitService {
    * @param socket - 소켓 인스턴스
    * @param chatRooms - 채팅방 목록
    */
-  getChatRoomsSuccess(socket: Socket, chatRooms: ChatRooms[]) {
-    const response: EventPayloadMap[EventChatRoom.GET_CHAT_ROOMS_SUCCESS] = {
-      chatRooms: chatRooms,
-    };
+  getChatRoomsSuccess(
+    socket: Socket,
+    result: GetChatRoomsSuccessResponseDto[],
+  ) {
+    const response: EventPayloadMap[EventChatRoom.GET_CHAT_ROOMS_SUCCESS] =
+      result;
     this.emitSuccess(socket, EventChatRoom.GET_CHAT_ROOMS_SUCCESS, response);
   }
 

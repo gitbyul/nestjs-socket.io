@@ -50,7 +50,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * 소켓 연결 이벤트 처리
    * @Event connection_established
    * @listener connection_established 소켓 연결 성공
-   * @listener unread_count_summary 읽지 않은 메시지 수 요약
+   * @listener get_chat_rooms_success 채팅방 목록 조회 성공
+   * @listener unread_count_summary_success 읽지 않은 메시지 수 요약
    * @listener connection_failed 소켓 연결 실패
    * @listener disconnected 소켓 연결 해제
    */
@@ -65,6 +66,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // 유저 연결 초기화
       await this.chatService.initializeUserConnection(user, socket);
       this.socketEmitService.connectionEstablished(socket, user.id);
+
+      // 채팅방 목록
+      const chatRooms = await this.chatService.getChatRoomListWithMember(
+        user.id,
+      );
+      this.socketEmitService.getChatRoomsSuccess(socket, chatRooms);
 
       // 읽지 않은 메시지 수 요약
       const unreadCountSummary = await this.chatService.unreadCountSummary(
@@ -147,7 +154,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @Event get_chat_rooms
    * @listener get_chat_rooms_success
    * @listener get_chat_rooms_failed
-   * @return chatRooms: ChatRooms[]
+   * @return chatRooms: GetChatRoomsSuccessResponseDto[]
    */
   @SubscribeMessage(EventChatRoom.GET_CHAT_ROOMS)
   @UseInterceptors(WebSocketUserValidationInterceptor)
