@@ -73,28 +73,6 @@ export class ChatMessages extends ValidationEntity {
   })
   systemMessage?: SystemMessageDto | null;
 
-  // {
-  //   title: string;
-  //   content: string;
-  //   notice?: {
-  //     type: ChatTemplateNoticeType; // NOTICE, WARNING, ALERT
-  //     message: string;
-  //   };
-  //   buttons?: {
-  //     btnLocation?: ChatTemplateButtonLocationType; // LEFT, RIGHT
-  //     text: string;
-  //   }[];
-  //   files?: {
-  //     originalName: string;
-  //     fileId: string;
-  //     size: number;
-  //   }[];
-  //   links?: {
-  //     title: string;
-  //     url: string;
-  //   }[];
-  // };
-
   @IsEnum(UserRole)
   @IsNotEmpty()
   @Column({
