@@ -15,45 +15,6 @@ export class ChatRoomRepository {
   ) {}
 
   /**
-   * 채팅방 비활성화 예약 시간이 지난 채팅방 목록 조회
-   * @returns 채팅방 목록
-   */
-  async getChatRoomListByDeactivationScheduledAt() {
-    const chatRooms = await this.chatRoomsRepository.find({
-      where: {
-        alive: true,
-        deactivationScheduledAt: LessThan(new Date()),
-      },
-    });
-    return chatRooms;
-  }
-
-  /**
-   * 채팅방 업데이트
-   * @param chatRoomId 채팅방 ID
-   * @param dto 업데이트 내용
-   */
-  async updateChatRoom(chatRoomId: string, dto: Partial<ChatRooms>) {
-    await this.chatRoomsRepository.update(chatRoomId, dto);
-  }
-
-  /**
-   * 채팅방 목록 조회
-   * @param userId 사용자 ID
-   * @returns 채팅방 목록
-   */
-  async getChatRoomList(userId: string) {
-    const chatRooms = await this.chatRoomsRepository.find({
-      where: {
-        chatRoomMembers: {
-          memberId: userId,
-        },
-      },
-    });
-    return chatRooms;
-  }
-
-  /**
    * 채팅방 목록 조회 (멤버 포함)
    * @param userId 사용자 ID
    * @returns 채팅방 목록
@@ -72,6 +33,7 @@ export class ChatRoomRepository {
           .getQuery();
         return `EXISTS ${subQuery}`;
       })
+      .orderBy('chatRoom.lastMessageAt', 'DESC')
       .getMany();
     return chatRooms;
   }
@@ -87,13 +49,16 @@ export class ChatRoomRepository {
         chatRoomMembers: { memberId: userId },
         alive: true,
       },
+      order: {
+        lastMessageAt: 'DESC',
+      },
     });
 
     return chatRooms;
   }
 
   /**
-   * 채팅방 조회
+   * 채팅방 조회 (단일 데이터)
    * @param chatRoomId 채팅방 ID
    * @param userId 사용자 ID
    * @returns 채팅방
@@ -113,7 +78,7 @@ export class ChatRoomRepository {
   }
 
   /**
-   * 채팅방 조회
+   * 채팅방 조회 (단일 데이터)
    * @param chatRoomId 채팅방 ID
    * @returns 채팅방
    */
@@ -130,7 +95,7 @@ export class ChatRoomRepository {
   }
 
   /**
-   * 채팅방 조회 (멤버 포함)
+   * 채팅방 조회 (단일 데이터) (멤버 포함)
    * @param chatRoomId 채팅방 ID
    * @param userId 사용자 ID
    * @returns 채팅방
@@ -159,5 +124,28 @@ export class ChatRoomRepository {
       lastMessageById: dto.senderId,
       lastMessageByRole: dto.senderType,
     });
+  }
+
+  /**
+   * 채팅방 비활성화 예약 시간이 지난 채팅방 목록 조회
+   * @returns 채팅방 목록
+   */
+  async getChatRoomListByDeactivationScheduledAt() {
+    const chatRooms = await this.chatRoomsRepository.find({
+      where: {
+        alive: true,
+        deactivationScheduledAt: LessThan(new Date()),
+      },
+    });
+    return chatRooms;
+  }
+
+  /**
+   * 채팅방 업데이트
+   * @param chatRoomId 채팅방 ID
+   * @param dto 업데이트 내용
+   */
+  async updateChatRoom(chatRoomId: string, dto: Partial<ChatRooms>) {
+    await this.chatRoomsRepository.update(chatRoomId, dto);
   }
 }
