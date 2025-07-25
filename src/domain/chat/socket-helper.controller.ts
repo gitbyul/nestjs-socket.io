@@ -21,6 +21,26 @@ import { UnreadCountSummaryFailedResponseDto } from './dto/response/unread-count
 @Controller('socket-helper')
 @ApiTags('SocketHelper')
 export class SocketHelperController {
+  @Get('/connection_helper')
+  @ApiOperation({
+    summary: '소켓 연결 방법',
+    description: `
+    Websocket 서버 연결 방법
+    1. 소켓 연결 방법
+    - query 파라미터 방식
+      - wss://localhost:3000?token=Bearer <token>
+    - header 파라미터 방식
+      - Authorization: Bearer <token>
+    - auth 파라미터 방식
+      - const socket = io({ auth: { token: <token> }});
+    `,
+  })
+  connectionHelper() {
+    return ResponseEntity.success({
+      message: 'Connection helper',
+    });
+  }
+
   @Get('/connection_established')
   @ApiOperation({
     summary: '소켓 연결 성공',
