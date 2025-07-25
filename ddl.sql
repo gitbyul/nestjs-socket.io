@@ -1,56 +1,358 @@
-CREATE TABLE `chat_templates` (
-  `id` char(36) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'UUID',
-  `code` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '채팅 템플릿 코드',
-  `type` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '채팅 템플릿 타입',
-  `action_type` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '채팅 템플릿 액션 타입',
-  `title` varchar(100) COLLATE utf8mb4_general_ci NOT NULL COMMENT '채팅 템플릿 제목',
-  `content` text COLLATE utf8mb4_general_ci NOT NULL COMMENT '채팅 템플릿 내용',
-  `url` varchar(512) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '채팅 템플릿 링크',
-  `is_link` tinyint(1) DEFAULT FALSE COMMENT '링크 여부',
-  `is_file` tinyint(1) DEFAULT FALSE COMMENT '파일 여부',
-  `order` int(11) DEFAULT NULL COMMENT '순서',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='채팅 템플릿 테이블';
+-- 광고주 테이블 컬럼 추가 [2025-07-21] [개발계 적용 완료]
+alter table advertisers add column profile_img_url varchar(500) null comment '프로필 이미지 URL' after biz_img_url;
 
-insert into chat_templates (id, code, type, action_type, title, content, url, is_link, is_file, `order`) values 
-(uuid(), 'ADVERTISER_AD_PROPOSAL_MESSAGE', 'TEMPLATE', NULL, '[광고명]', '[회사명]님이 제안서를 전송했어요.\n제안서는 아래 버튼을 누르거나 제안 메뉴에서 확인할 수 있어요.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_PROPOSAL_MESSAGE', 'NOTICE', 'NOTICE', NULL, '제안서의 내용은 작가님과 회사 모두 수정할 수 있어요.\n수정하고 싶은 내용이 있다면 충분한 협의 후 수정해주세요!', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_PROPOSAL_UPDATE_MESSAGE', 'TEMPLATE', NULL, '제안을 수정했어요.', '[회사명]님이 제안서를 수정했어요.\n제안서는 아래 버튼을 누르거나 제안 메뉴에서 확인할 수 있어요.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_PROPOSAL_UPDATE_MESSAGE', 'NOTICE', 'NOTICE', NULL, '제안서의 내용은 작가님과 회사 모두 수정할 수 있어요.\n수정하고 싶은 내용이 있다면 충분한 협의 후 수정해주세요!', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_PROPOSAL_ACCEPT_MESSAGE', 'TEMPLATE', NULL, '제안을 수락했어요', '[작가명]님이 제안을 수락했습니다.\n최종 제안서를 검토하신 후 이상이 없다면 제안 수락 버튼을 눌러주세요!', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_PROPOSAL_ACCEPT_MESSAGE', 'NOTICE', 'WARNING', NULL, '제안을 수락하면 더이상 수정할 수 없습니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_PROPOSAL_ACCEPTED_MESSAGE', 'TEMPLATE', NULL, '제안을 수락했어요', '[회사명]님이 제안서를 수정했습니다.\n영업일 1~2일 이내로 등록한 이메일을 통해 계약서가 발송됩니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_PROPOSAL_ACCEPTED_MESSAGE', 'NOTICE', 'ALERT', NULL, '계약은 회사→작가 순으로 수락이 진행됩니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_PROPOSAL_REJECTED_MESSAGE', 'TEMPLATE', NULL, '제안을 거절했어요', '[회사명]님이 제안을 거절했습니다.\n제안을 재개하고 싶으시다면, 협업 작가 리스트에서 새로운 제안을\n보내주세요!', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_PROPOSAL_REJECTED_MESSAGE', 'NOTICE', 'NOTICE', NULL, '**제안 거절 상태의 채팅방에 조치가 있다면 추가(ex. 7일후 채팅 비활성화)', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_CONTRACT_REQUEST_COMPLETE_MESSAGE', 'TEMPLATE', NULL, '[회사명]님, 계약을 완료해주세요!', '이메일로 계약서를 전송했어요.\n계약 내용을 확인하신 후, 아래 버튼이나 진행내역을 통해 계약을 진행하세요.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_CONTRACT_REQUEST_COMPLETE_MESSAGE', 'NOTICE', 'ALERT', NULL, '계약은 회사->작가 순으로 수락이 진행됩니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_CONTRACT_COMPLETE_MESSAGE', 'TEMPLATE', NULL, '[회사명]님이 계약에 동의하였습니다.', '[작가명]님이 계약에 동의하시면 최종 계약이 완료됩니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_CONTRACT_REQUEST_COMPLETE_MESSAGE', 'TEMPLATE', NULL, '[작가명]님 계약을 완료해주세요!', '이메일로 계약서를 전송했어요\n계약 내용을 확인하신 후, 아래 버튼이나 진행내역을 통해 계약을 진행하세요.', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_CONTRACT_COMPLETE_MESSAGE', 'TEMPLATE', NULL, '[작가명]님이 계약에 동의하였습니다.', '계약이 완료되었습니다\n계약서에 기재된 기한에 맞춰 작업이 진행됩니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_CONTRACT_COMPLETE_MESSAGE', 'NOTICE', 'NOTICE', NULL, '작업 진행 과정에서 툰어스의 중재가 필요한 경우 하단의 중재요청 버튼을 눌러주세요.', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_CONTRACT_COMPLETE_MESSAGE', 'BUTTON', 'FULL', NULL, '계약서 보기', '[URL 작성 필요]', FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_CONTRACT_COMPLETE_MESSAGE', 'BUTTON', 'FULL', NULL, 'AI로 레퍼런스 콘티 전달하기', '[URL 작성 필요]', FALSE, FALSE, 1),
-(uuid(), 'AUTHOR_AD_CONTI_WORK_START_NOTICE', 'TEMPLATE', NULL, '[작가명]님 콘티이 콘티 작업을 시작하였습니다.', NULL, NULL, FALSE, TRUE, 0),
-(uuid(), 'AUTHOR_AD_CONTI_WORK_START_NOTICE', 'NOTICE', 'NOTICE', NULL, '원하는 콘티가 있다면 <콘티 생성 AI>를 이용해보세요!\n자료가 구체적일 수록 작업물의 만족도도 높아질 거에요.', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_CONTI_WORK_START_NOTICE', 'BUTTON', 'FULL', NULL, '콘티 생성 AI 사용하기', '[URL 작성 필요]', FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_CONTI_WORK_CONFIRM_REQUEST', 'TEMPLATE', NULL, '[회사명]님 콘티를 확인해주세요!', '수정사항이 있으시다면 수정 요청하기 버튼을 눌러주세요.\n이상이 없다면 컨펌하기 버튼을 눌러 다음 작업을 진행하세요.', NULL, FALSE, TRUE, 0),
-(uuid(), 'AUTHOR_AD_CONTI_WORK_CONFIRM_REQUEST', 'BUTTON', 'LEFT', NULL, '수정 요청하기', '[URL 작성 필요]', FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_CONTI_WORK_CONFIRM_REQUEST', 'BUTTON', 'RIGHT', NULL, '컨펌하기', '[URL 작성 필요]', FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_CONTI_UPDATE_REQUEST', 'TEMPLATE', NULL, '[회사명]님이 수정을 요청했습니다.', '[작가명]님이 수정한 파일을 전달하시거나, 오른쪽 작업 내역에서 컨펌하기를 통해 작업을 다시 진행 할 수 있습니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_CONTI_CONFIRM_COMPLETE', 'TEMPLATE', NULL, '[회사명]님이 콘티 컨펌을 완료하였습니다.', '콘티 컨펌이 완료되면 본 작업이 진행 됩니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_CONTI_CONFIRM_COMPLETE', 'NOTICE', 'ALERT', NULL, '작가님께서 작업을 시작하시면,알림을 통해 안내드릴 예정입니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_WORK_START_NOTICE', 'TEMPLATE', NULL, '[작가명]님이 작업을 시작하였습니다.', NULL, NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_WORK_START_NOTICE', 'NOTICE', 'NOTICE', NULL, '작업이 완료되면 파일 전달과 함께 최종 컨펌이 진행됩니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_WORK_CONFIRM_REQUEST', 'TEMPLATE', NULL, '[회사명]님 작업물을 확인해주세요!', '수정사항이 있으시다면 수정 요청하기 버튼을 눌러주세요.\n이상이 없다면 컨펌하기 버튼을 눌러 다음 작업을 진행하세요.', NULL, FALSE, TRUE, 0),
-(uuid(), 'AUTHOR_AD_WORK_CONFIRM_REQUEST', 'NOTICE', 'WARNING', NULL, '최종 컨펌 이후에는 수정이 어려울 수 있으므로, 신중한 검토 부탁드립니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_WORK_CONFIRM_REQUEST', 'BUTTON', 'LEFT', NULL, '수정 요청하기', '[URL 작성 필요]', FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_WORK_CONFIRM_REQUEST', 'BUTTON', 'RIGHT', NULL, '최종 컨펌하기', '[URL 작성 필요]', FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_WORK_UPDATE_REQUEST', 'TEMPLATE', NULL, '[회사명]님이 수정을 요청했습니다.', '[작가명]님이 수정한 파일을 전달하시거나, 오른쪽 작업 내역에서 컨펌하기를 통해 작업을 다시 진행 할 수 있습니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_WORK_CONFIRM_COMPLETE', 'TEMPLATE', NULL, '[회사명]님이 작업물 컨펌을 완료하였습니다.', '작업물 컨펌이 완료되면 본 작업이 진행 됩니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'ADVERTISER_AD_WORK_CONFIRM_COMPLETE', 'NOTICE', 'ALERT', NULL, '작가님께서 작업을 시작하시면,알림을 통해 안내드릴 예정입니다.', NULL, FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_EXECUTION_COMPLETE', 'TEMPLATE', NULL, '[작가명]님이 광고 집행을 시작하였습니다.', '완성된 작업물이 공개되었습니다. 광고의 성과는 상단 메뉴의 대시보드 또는 아래 버튼을 통해 열람할 수 있습니다.', NULL, TRUE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_EXECUTION_COMPLETE', 'BUTTON', 'LEFT', NULL, '대시보드로 이동', '[URL 작성 필요]', FALSE, FALSE, 0),
-(uuid(), 'AUTHOR_AD_EXECUTION_COMPLETE', 'BUTTON', 'RIGHT', NULL, '광고 확인하기', '[URL 작성 필요]', FALSE, FALSE, 0);
+-- 작가 테이블 컬럼 추가 [2025-06-17] [개발계 적용 완료] [2025-07-21] [운영계 적용 완료]
+-- alter table author add column service_thumbnail_url varchar(255) comment '서비스 썸네일 URL';
+-- alter table author add column service_price_min int comment '서비스 단가 최소';
+-- alter table author add column service_price_max int comment '서비스 단가 최대';
+-- alter table author add column service_text text comment '서비스 소개';
+-- alter table author add column service_extra json default null comment '부가 서비스';
+
+-- 회원 테이블 컬럼 추가 [2025-07-04] [개발계 적용 완료] [운영계 적용 완료]
+-- alter table reader add column phoneOperator varchar(10) null comment "휴대폰 통신사";
+-- alter table reader add column phoneNumber varchar(20) null comment "휴대폰 번호 (01012345678)";
+-- alter table reader add column birthDate varchar(20) null comment "생년월일 (yyyy-MM-dd)";
+-- alter table reader add column gender varchar(10) null comment "성별";
+-- alter table reader add column phoneNumberVerified boolean not null comment "휴대폰 번호 인증 여부";
+-- alter table reader add column phoneNumberVerifiedAt timestamp null comment "휴대폰 번호 인증 일시";
+-- alter table reader add column isAdult boolean not null comment "성인 여부";
+-- alter table reader add column isForeigner boolean not null comment "외국인 여부";
+-- alter table reader add column ci varchar(255) null comment "CI";
+-- alter table reader add column di varchar(255) null comment "DI";
+
+-- -- 광고주 테이블
+-- DROP TABLE IF EXISTS advertisers;
+-- CREATE TABLE advertisers (
+--   id CHAR(36)     NOT NULL COMMENT 'UUID',
+--   user_id       VARCHAR(30)  NOT NULL COMMENT '인증/인가 ID',
+--   email         VARCHAR(100) NOT NULL COMMENT '광고주 이메일',
+--   password      VARCHAR(255) NOT NULL COMMENT '비밀번호',
+--   biz_no        VARCHAR(20)  NOT NULL COMMENT '사업자등록번호',
+--   biz_name      VARCHAR(100) NOT NULL COMMENT '사업체명',
+--   contact_name  VARCHAR(50)  NOT NULL COMMENT '담당자명',
+--   phone_number  VARCHAR(20)  NOT NULL COMMENT '연락처',
+--   agreed_marketing    TINYINT(1) NOT NULL DEFAULT 0 COMMENT '마케팅 동의 여부',
+--   biz_img_url   VARCHAR(500)          COMMENT '사업자등록증 이미지 URL',
+--   status        ENUM(
+--     'ACTIVE', -- 활성
+--     'INACTIVE', -- 활성
+--     'PENDING', -- 대기
+--     'REJECTED', -- 거절
+--     'DELETED' -- 삭제
+--   ) NOT NULL DEFAULT 'PENDING' COMMENT '계정 상태',
+--   created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
+--   deleted_at    TIMESTAMP     NULL COMMENT '삭제일시',
+--   last_updated_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '최종수정일시',
+--   last_login_at    TIMESTAMP     NULL COMMENT '최종로그인일',
+--   CONSTRAINT `PK_advertisers` PRIMARY KEY (id),
+--   CONSTRAINT `UK_advertisers_email` UNIQUE (email),
+--   CONSTRAINT `UK_advertisers_user_id` UNIQUE (user_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='광고주 테이블';
+
+-- -- 광고제안서 테이블
+-- DROP TABLE IF EXISTS ad_proposals;
+-- CREATE TABLE ad_proposals (
+--   id CHAR(36) NOT NULL COMMENT '광고 제안 ID (UUID)',
+--   advertiser_id CHAR(36) NOT NULL COMMENT '광고주 ID (FK)',
+--   author_id CHAR(36) NOT NULL COMMENT '작가 ID (FK)',
+--   promotion_request_url VARCHAR(255) NULL COMMENT '광고 제안서 홍보 요청 URL',
+--   title VARCHAR(255) NOT NULL COMMENT '광고 제안 제목',
+--   description TEXT NOT NULL COMMENT '광고 제안 설명',
+--   detail_description TEXT COMMENT '광고 제안 상세 설명',
+--   price BIGINT DEFAULT 0 COMMENT '광고 제안 가격',
+--   price_negotiation_status BOOLEAN NOT NULL DEFAULT FALSE COMMENT '광고 제안 가격 협의 후 결정 유무',
+--   artwork_revision_limit INT NOT NULL DEFAULT 0 COMMENT '광고주가 작가에게 요청할 수 있는 실작업물 수정요청 제한 횟수',
+--   ad_proposal_status ENUM(
+--     'PROPOSED', -- 제안됨(Only 광고주)
+--     'PUBLISHED', -- 광고 게시됨(Only 작가)
+--     'REVISION_REQUESTED', -- 제안서수청(광고주가 작가에게 제안서 수정 요청)
+--     'ACCEPTED_BY_AUTHOR', -- 작가 제안 수락(작가가 광고주의 제안을 수락)
+--     'ACCEPTED_BY_ADVERTISER', -- 광고주 제안 수락(광고주가 작가의 제안을 수락)
+--     'CONTRACT_COMPLETED_BY_AUTHOR', -- 작가 계약 완료
+--     'CONTRACT_COMPLETED_BY_ADVERTISER', -- 광고주 계약 완료
+--     'CANCELED_BY_AUTHOR', -- 작가 제안 거절/취소(작가가 광고주에게 제안서 거절/취소)
+--     'CANCELED_BY_ADVERTISER', -- 광고주 제안 거절/취소(광고주가 작가에게 제안서 거절/취소)
+--     'MEDIATION_REQUESTED', -- 관리자(크로우) 중재요청 대기
+--     'MEDIATION_COMPLETED', -- 관리자(크로우) 중재요청 완료
+--     'MEDIATION_CANCELED', -- 관리자(크로우) 중재요청 취소
+--     'CLOSED_AUTHOR', -- 계약 종료(작가)
+--     'CLOSED_ADVERTISER' -- 계약 종료(광고주)
+--   ) NOT NULL DEFAULT 'PROPOSED' COMMENT '광고 제안 상태',
+--   ad_proposal_status_updated_by_type ENUM('ADMIN', 'ADVERTISER', 'AUTHOR') NOT NULL DEFAULT 'ADVERTISER' COMMENT '광고 제안 상태 수정자 타입(광고주/작가/관리자)',
+--   ad_proposal_status_updated_at TIMESTAMP NOT NULL COMMENT '광고 제안 상태 수정일시',
+--   ad_proposal_status_updated_by CHAR(36) NOT NULL COMMENT '광고 제안 상태 수정자(광고주/작가/관리자)',
+--   contract_signed_at TIMESTAMP NULL COMMENT '계약 체결일시',
+--   author_work_status ENUM(
+--     'WAITING', -- 작업 대기
+--     'CONTE_CREATING', -- 콘티 제작 중
+--     'CONTE_CONFIRM_REQUESTED', -- 콘티 컨펌 요청
+--     'CONTE_REVISING', -- 콘티 수정 작업 중
+--     'ARTWORK_CREATING', -- 실작업물 제작 중
+--     'ARTWORK_REVISION_REQUESTED', -- 실작업물 수정 요청됨
+--     'ARTWORK_REVISING', -- 실작업물 수정 작업 중
+--     'SETTLEMENT_REQUESTED', -- 정산 요청
+--     'PUBLISHED' -- 광고 게시
+--   ) DEFAULT NULL COMMENT '작가 작업 상태',
+--   author_status_updated_at TIMESTAMP NULL COMMENT '작가 상태 수정일시',
+--   author_ad_execution_at TIMESTAMP NULL COMMENT '작가 광고 집행일시',
+--   mediation_requested BOOLEAN NOT NULL DEFAULT FALSE COMMENT '중재요청 플래그',
+--   mediation_requested_reason TEXT COMMENT '중재요청/취소 사유',
+--   mediation_requested_by_type ENUM('ADMIN', 'ADVERTISER', 'AUTHOR') DEFAULT NULL COMMENT '중재요청자 타입(광고주/작가/관리자)',
+--   mediation_requested_by CHAR(36) DEFAULT NULL COMMENT '중재요청자 ID',
+--   mediation_requested_at TIMESTAMP NULL COMMENT '중재요청일시',
+--   admin_memo TEXT COMMENT '관리자 메모',
+--   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
+--   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
+--   deleted_at TIMESTAMP NULL COMMENT '삭제일시',
+--   CONSTRAINT `PK_ad_proposals` PRIMARY KEY (id),
+--   INDEX `FK_ad_proposals_advertiser_id` (advertiser_id),
+--   INDEX `FK_ad_proposals_author_id` (author_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='광고 제안서';
+
+
+-- -- 광고제안서 히스토리 테이블
+-- DROP TABLE IF EXISTS ad_proposals_history;
+-- CREATE TABLE ad_proposals_history (
+--   id CHAR(36) NOT NULL COMMENT '광고 제안 히스토리 ID (UUID)',
+--   ad_proposal_id CHAR(36) NOT NULL COMMENT '광고 제안 ID (UUID)',
+--   advertiser_id CHAR(36) NOT NULL COMMENT '광고주 ID (FK)',
+--   author_id CHAR(36) NOT NULL COMMENT '작가 ID (FK)',
+--   promotion_request_url VARCHAR(255) NULL COMMENT '광고 제안서 홍보 요청 URL',
+--   title VARCHAR(255) NOT NULL COMMENT '광고 제안 제목',
+--   description TEXT NOT NULL COMMENT '광고 제안 설명',
+--   detail_description TEXT COMMENT '광고 제안 상세 설명',
+--   price BIGINT DEFAULT 0 COMMENT '광고 제안 가격',
+--   price_negotiation_status BOOLEAN NOT NULL DEFAULT FALSE COMMENT '광고 제안 가격 협의 후 결정 유무',
+--   artwork_revision_limit INT NOT NULL DEFAULT 0 COMMENT '광고주가 작가에게 요청할 수 있는 실작업물 수정요청 제한 횟수',
+--   ad_proposal_status VARCHAR(100) NOT NULL DEFAULT 'PROPOSED' COMMENT '광고 제안 상태',
+--   ad_proposal_status_updated_by_type ENUM('ADMIN', 'ADVERTISER', 'AUTHOR') NOT NULL DEFAULT 'ADVERTISER' COMMENT '광고 제안 상태 수정자 타입(광고주/작가/관리자)',
+--   ad_proposal_status_updated_at TIMESTAMP NOT NULL COMMENT '광고 제안 상태 수정일시',
+--   ad_proposal_status_updated_by CHAR(36) NOT NULL COMMENT '광고 제안 상태 수정자(광고주/작가/관리자)',
+--   author_work_status VARCHAR(100) DEFAULT NULL COMMENT '작가 작업 상태',
+--   author_status_updated_at TIMESTAMP NULL COMMENT '작가 상태 수정일시',
+--   mediation_requested BOOLEAN NOT NULL DEFAULT FALSE COMMENT '중재요청 플래그',
+--   mediation_requested_reason TEXT COMMENT '중재요청 사유',
+--   mediation_requested_by_type ENUM('ADMIN', 'ADVERTISER', 'AUTHOR') DEFAULT NULL COMMENT '중재요청자 타입(광고주/작가/관리자)',
+--   mediation_requested_by CHAR(36) DEFAULT NULL COMMENT '중재요청자 ID',
+--   mediation_requested_at TIMESTAMP NULL COMMENT '중재요청일시',
+--   admin_memo TEXT COMMENT '관리자 메모',
+--   proposal_created_at TIMESTAMP NOT NULL COMMENT '원본 광고 제안서 생성일시',
+--   proposal_updated_at TIMESTAMP NOT NULL COMMENT '원본 광고 제안서 수정일시',
+--   proposal_deleted_at TIMESTAMP NULL COMMENT '원본 광고 제안서 삭제일시',
+--   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
+--   CONSTRAINT `PK_ad_proposals_history` PRIMARY KEY (id),
+--   INDEX `FK_ad_proposals_history_ad_proposal_id` (ad_proposal_id),
+--   INDEX `FK_ad_proposals_history_advertiser_id` (advertiser_id),
+--   INDEX `FK_ad_proposals_history_author_id` (author_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='광고 제안서 히스토리';
+
+-- -- 광고 제안 성과 테이블
+-- DROP TABLE IF EXISTS `ad_proposal_performance`;
+-- CREATE TABLE ad_proposal_performance (
+--   id CHAR(36) NOT NULL COMMENT 'UUID',
+--   ad_proposal_id CHAR(36) NOT NULL COMMENT '광고 제안 ID (FK)',
+--   url_mapping_id CHAR(36) NULL COMMENT 'URL 매핑 ID (FK)',
+--   platform VARCHAR(255) NOT NULL COMMENT '플랫폼',
+--   platform_url VARCHAR(255) NOT NULL COMMENT '플랫폼 링크',
+--   view_count INT NOT NULL DEFAULT 0 COMMENT '광고 게시물 조회 수',
+--   like_count INT NOT NULL DEFAULT 0 COMMENT '광고 게시물 좋아요 수',
+--   comment_count INT NOT NULL DEFAULT 0 COMMENT '광고 게시물 댓글 수',
+--   click_count INT NOT NULL DEFAULT 0 COMMENT '광고 링크 클릭 수',
+--   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
+--   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
+--   CONSTRAINT `PK_ad_proposal_performance` PRIMARY KEY (id),
+--   INDEX `FK_ad_proposal_performance_ad_proposal` (ad_proposal_id),
+--   INDEX `FK_ad_proposal_performance_url_mapping` (url_mapping_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='광고 제안 성과';
+
+-- -- 작가 후기 테이블
+-- DROP TABLE IF EXISTS author_review;
+-- CREATE TABLE author_review (
+--   id CHAR(36) NOT NULL COMMENT '작가 후기 ID (UUID)',
+--   author_id CHAR(36) NOT NULL COMMENT '작가 ID (FK)',
+--   advertiser_id CHAR(36) NOT NULL COMMENT '광고주 ID (FK)',
+--   ad_proposal_id CHAR(36) NOT NULL COMMENT '광고 제안 ID (FK)',
+--   title VARCHAR(255) NOT NULL COMMENT '작가 후기 제목',
+--   content TEXT NOT NULL COMMENT '작가 후기 내용',
+--   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
+--   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일시',
+--   deleted_at TIMESTAMP NULL COMMENT '삭제일시',
+--   CONSTRAINT `PK_author_review` PRIMARY KEY (id),
+--   INDEX `FK_author_review_author_id` (author_id),
+--   INDEX `FK_author_review_advertiser_id` (advertiser_id),
+--   INDEX `FK_author_review_ad_proposal_id` (ad_proposal_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='작가 후기';
+
+-- -- 파일 테이블
+-- DROP TABLE IF EXISTS files;
+-- CREATE TABLE files (
+--   id CHAR(36) NOT NULL COMMENT '파일 ID (UUID)',
+--   original_filename VARCHAR(255) NOT NULL COMMENT '파일 이름',
+--   mimetype VARCHAR(100) NOT NULL COMMENT '파일 타입',
+--   size BIGINT NULL COMMENT '파일 크기 (바이트)',
+--   path VARCHAR(500) NOT NULL COMMENT '파일 S3 경로',
+--   url VARCHAR(1000) NOT NULL COMMENT '파일 접근 URL',
+--   related_table VARCHAR(100) NULL COMMENT '연관 테이블',
+--   related_code VARCHAR(100) NULL COMMENT '연관 코드',
+--   related_id VARCHAR(36) NULL COMMENT '연관 아이디',
+--   order_number INT NULL COMMENT '파일 순번',
+--   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
+--   is_deleted BOOLEAN NOT NULL DEFAULT FALSE COMMENT '삭제 여부',
+--   deleted_at TIMESTAMP NULL COMMENT '삭제일시',
+--   CONSTRAINT PK_files PRIMARY KEY (id),
+-- --   CONSTRAINT UK_files UNIQUE (path),
+--   INDEX `KEY_files_related_table` (related_table, related_code, related_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='파일';
+
+-- -- 채팅 연결 유저 테이블
+-- DROP TABLE IF EXISTS `chat_connected_users`;
+-- CREATE TABLE `chat_connected_users` (
+--   id VARCHAR(36) NOT NULL COMMENT 'UUID',
+--   user_id VARCHAR(36) NOT NULL COMMENT '유저 아이디',
+--   role VARCHAR(255) NOT NULL COMMENT '유저 타입',
+--   socket_id VARCHAR(255) NULL COMMENT '소켓 아이디',
+--   alive BOOLEAN NOT NULL COMMENT '활성화 여부',
+--   login_at DATETIME NOT NULL COMMENT '로그인 시간',
+--   logout_at DATETIME COMMENT '로그아웃 시간',
+--   last_activity_at DATETIME COMMENT '마지막 활동 시간',
+--   CONSTRAINT `PK_chat_connected_users` PRIMARY KEY (id),
+--   INDEX `IDX_chat_connected_users_user_id` (user_id),
+--   INDEX `IDX_chat_connected_users_socket_id` (socket_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='채팅 연결 유저';
+
+-- -- 채팅방 테이블
+-- CREATE TABLE `chat_rooms` (
+--   `id` CHAR(36) NOT NULL COMMENT 'UUID',
+--   `chat_room_type` ENUM('AD_PROPOSAL') NOT NULL COMMENT '채팅방 타입',
+--   `chat_room_related_id` CHAR(36) NOT NULL COMMENT '채팅방 연관 ID',
+--   `operator_type` ENUM('ADVERTISER', 'AUTHOR', 'ADMIN') NOT NULL COMMENT '채팅방 생성자 타입',
+--   `operator_id` CHAR(36) NOT NULL COMMENT '채팅방 생성자 ID',
+--   `alive` BOOLEAN NOT NULL COMMENT '채팅방 활성화 여부',
+--   `deactivation_scheduled_at` TIMESTAMP NULL COMMENT '채팅방 비활성화 예약 시간',
+--   `deactivation_reason` VARCHAR(255) NULL COMMENT '채팅방 비활성화 예약 사유',
+--   `last_message_by_role` ENUM('ADVERTISER', 'AUTHOR', 'ADMIN') NULL COMMENT '마지막 메시지 보낸 사람 타입',
+--   `last_message_by_id` CHAR(36) NULL COMMENT '마지막 메시지 보낸 사람 ID',
+--   `last_message` TEXT NULL COMMENT '마지막 메시지',
+--   `last_message_at` TIMESTAMP NULL COMMENT '마지막 메시지 시간',
+--   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
+--   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+--   PRIMARY KEY (`id`),
+--   INDEX `FK_chat_rooms_related_table` (chat_room_type, chat_room_related_id),
+--   INDEX `FK_chat_rooms_operator_id` (operator_type, operator_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='채팅방 테이블';
+
+-- -- 채팅 참여자 테이블
+-- CREATE TABLE `chat_room_members` (
+--   `id` CHAR(36) NOT NULL COMMENT 'UUID',
+--   `chat_room_id` CHAR(36) NOT NULL COMMENT '채팅방 ID',
+--   `member_type` ENUM('ADVERTISER', 'AUTHOR', 'ADMIN') NOT NULL COMMENT '채팅 참여자 타입',
+--   `member_id` CHAR(36) NOT NULL COMMENT '채팅 참여자 ID',
+--   `unread_message_count` INT NOT NULL DEFAULT 0 COMMENT '채팅 참여자 읽지 않은 메시지 수',
+--   `last_read_message_id` CHAR(36) NULL COMMENT '채팅 참여자 마지막 읽은 메시지 ID',
+--   `last_read_at` TIMESTAMP NULL COMMENT '채팅 참여자 마지막 읽은 시간',
+--   `alive` BOOLEAN NOT NULL COMMENT '채팅 참여자 활성화 여부',
+--   `joined_at` TIMESTAMP NOT NULL COMMENT '채팅 참여자 가입 시간',
+--   `left_at` TIMESTAMP NULL COMMENT '채팅 참여자 탈퇴 시간',
+--   PRIMARY KEY (`id`),
+--   INDEX `FK_chat_room_members_chat_room_id` (chat_room_id),
+--   INDEX `FK_chat_room_members_member_id` (member_type, member_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='채팅 참여자 테이블';
+
+-- -- 채팅 메시지 테이블
+-- CREATE TABLE `chat_messages` (
+--   `id` CHAR(36) NOT NULL COMMENT 'UUID',
+--   `chat_room_id` CHAR(36) NOT NULL COMMENT '채팅방 ID',
+--   `type` ENUM('TEXT', 'FILE', 'SYSTEM') NOT NULL COMMENT '메시지 타입',
+--   `message` TEXT NULL COMMENT '메시지',
+--   `system_message` TEXT NULL COMMENT '시스템 메시지',
+--   `sender_type` ENUM('ADVERTISER', 'AUTHOR', 'ADMIN') NOT NULL COMMENT '메시지 보낸 사람 타입',
+--   `sender_id` CHAR(36) NOT NULL COMMENT '메시지 보낸 사람 ID',
+--   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
+--   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+--   PRIMARY KEY (`id`),
+--   INDEX `FK_chat_messages_chat_room_id` (chat_room_id),
+--   INDEX `FK_chat_messages_sender_id` (sender_type, sender_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='채팅 메시지 테이블';
+
+-- -- 채팅 템플릿 테이블
+-- CREATE TABLE `chat_templates` (
+--   `id` char(36) NOT NULL COMMENT 'UUID',
+--   `code` varchar(100) NOT NULL COMMENT '채팅 템플릿 코드',
+--   `type` varchar(100) NOT NULL COMMENT '채팅 템플릿 타입',
+--   `action_type` varchar(100) NOT NULL COMMENT '채팅 템플릿 액션 타입',
+--   `title` varchar(100) NOT NULL COMMENT '채팅 템플릿 제목',
+--   `content` text NOT NULL COMMENT '채팅 템플릿 내용',
+--   `url` varchar(512) DEFAULT NULL COMMENT '채팅 템플릿 링크',
+--   `is_link` tinyint(1) DEFAULT FALSE COMMENT '링크 여부',
+--   `is_file` tinyint(1) DEFAULT FALSE COMMENT '파일 여부',
+--   `order` int(11) DEFAULT NULL COMMENT '파일 순서',
+--   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
+--   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+--   PRIMARY KEY (`id`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='채팅 템플릿 테이블';
+
+-- -- 작가 플랫폼
+-- DROP TABLE `author_platform`;
+-- CREATE TABLE `author_platform` (
+--   `id` varchar(36) NOT NULL,
+--   `author_id` varchar(36) NOT NULL,
+--   `platform` varchar(255) NOT NULL COMMENT '플랫폼',
+--   `user_id` varchar(255) NOT NULL COMMENT '플랫폼 유저 아이디',
+--   `username` varchar(255) NOT NULL COMMENT '플랫폼 유저 이름',
+--   `full_name` varchar(255) NOT NULL COMMENT '플랫폼 유저 전체 이름',
+--   `follower_count` int(11) NOT NULL COMMENT '팔로워 수',
+--   `following_count` int(11) NOT NULL COMMENT '팔로잉 수',
+--   `media_count` int(11) NOT NULL COMMENT '미디어 수',
+--   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
+--   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+--   PRIMARY KEY (`id`),
+--   KEY `author_platform_author_id_index` (`author_id`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='작가 플랫폼';
+
+-- -- 작가 스크래핑 스케줄
+-- DROP TABLE `author_scraping_schedule`;
+-- CREATE TABLE `author_scraping_schedule` (
+--   `id` varchar(36) NOT NULL,
+--   `author_id` varchar(36) NOT NULL,
+--   `type` varchar(255) NOT NULL COMMENT '스크래핑 타입',
+--   `next_update_at` timestamp NULL DEFAULT NULL COMMENT '다음 업데이트 일시',
+--   `update_cycle` int(11) NOT NULL DEFAULT 7 COMMENT '업데이트 주기 (일)',
+--   `scraping_status` varchar(255) NOT NULL COMMENT '스크래핑 상태',
+--   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
+--   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+--   PRIMARY KEY (`id`),
+--   KEY `author_scraping_schedule_author_id_index` (`author_id`),
+--   UNIQUE KEY `author_scraping_schedule_author_id_type_unique` (`author_id`, `type`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='작가 스크래핑 스케줄';
+
+-- -- 작가 스크래핑 히스토리
+-- DROP TABLE `author_scraping_history`;
+-- CREATE TABLE `author_scraping_history` (
+--   `id` varchar(36) NOT NULL,
+--   `author_id` varchar(36) NOT NULL,
+--   `work_id` varchar(36) NULL,
+--   `author_scraping_schedule_id` varchar(36) NULL,
+--   `type` varchar(255) NOT NULL COMMENT '스크래핑 타입',
+--   `next_update_at` timestamp NULL DEFAULT NULL COMMENT '다음 업데이트 일시',
+--   `update_cycle` int(11) NOT NULL DEFAULT 7 COMMENT '업데이트 주기 (일)',
+--   `scraping_status` varchar(255) NOT NULL COMMENT '스크래핑 상태',
+--   `scraping_failed_reason` varchar(255) DEFAULT NULL COMMENT '스크래핑 실패 이유',
+--   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
+--   PRIMARY KEY (`id`),
+--   KEY `author_scraping_history_author_id_index` (`author_id`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='작가 스크래핑 히스토리';
+
+-- -- URL 매핑 테이블
+-- DROP TABLE IF EXISTS `url_mappings`;
+-- CREATE TABLE url_mappings (
+--   `id` CHAR(36) NOT NULL COMMENT 'UUID',
+--   `short_id` VARCHAR(255) NOT NULL COMMENT '단축 URL',
+--   `redirect_url` VARCHAR(255) NOT NULL COMMENT '리디렉트 URL',
+--   `click_count` INT NOT NULL DEFAULT 0 COMMENT '클릭 수',
+--   `is_active` BOOLEAN NOT NULL DEFAULT TRUE COMMENT '활성 여부',
+--   `expires_at` TIMESTAMP NULL COMMENT '만료일시',
+--   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성일시',
+--   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '최종수정일시',
+--   CONSTRAINT `PK_url_mappings` PRIMARY KEY (id),
+--   CONSTRAINT `UK_url_mappings_short_id` UNIQUE (short_id)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='URL 매핑 테이블';
