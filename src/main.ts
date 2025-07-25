@@ -1,11 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { setupSwagger } from './config/openapi/swagger.setup';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Version
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: ['1'],
+  });
 
   // CORS
   const corsOptions = {
