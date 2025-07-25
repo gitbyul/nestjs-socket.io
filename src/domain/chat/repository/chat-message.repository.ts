@@ -47,6 +47,40 @@ export class ChatMessageRepository {
   /**
    * 메시지 조회
    * @param chatRoomId - 채팅방 ID
+   * @returns 메시지
+   */
+  async getChatMessageList(messageData: { chatRoomId: string }) {
+    return await this.chatMessagesRepository.find({
+      select: {
+        id: true,
+        chatRoom: {
+          id: true,
+        },
+        type: true,
+        message: true,
+        systemMessage: true,
+        createdAt: true,
+        updatedAt: true,
+        senderType: true,
+        senderId: true,
+        files: true,
+      },
+      where: {
+        chatRoom: { id: messageData.chatRoomId },
+      },
+      relations: {
+        chatRoom: true,
+        files: true,
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+  }
+
+  /**
+   * 메시지 조회
+   * @param chatRoomId - 채팅방 ID
    * @param messageId - 메시지 ID
    * @returns 메시지
    */
@@ -55,6 +89,9 @@ export class ChatMessageRepository {
       where: {
         id: messageData.messageId,
         chatRoom: { id: messageData.chatRoomId },
+      },
+      order: {
+        createdAt: 'DESC',
       },
     });
     return chatMessage;

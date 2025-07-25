@@ -34,6 +34,8 @@ import { ChatRoomMemberReadMessageOrderInvalidException } from 'src/config/excep
 import { ChatRoomMemberReadMessageSameIdException } from 'src/config/exception/chat-room-member-read-message-same-id.exception';
 import { LogWebSocketInterceptor } from 'src/config/log/log-ws.interceptor';
 import { ChatRoomNotAliveException } from 'src/config/exception/chat-room-not-alive.exception';
+import { GetMessageRequestDto } from './dto/request/get-message.request';
+import { ChatRoomMemberNotFoundException } from 'src/config/exception/chat-room-member-not-found.exception';
 
 @WebSocketGateway()
 @UseInterceptors(LogWebSocketInterceptor)
@@ -177,6 +179,45 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         EventErrorCode.INTERNAL_ERROR,
         error,
       );
+    }
+  }
+
+  /**
+   * 채팅방 메시지 목록 조회
+   * @Event get_chat_message_list
+   * @listener get_chat_message_list_success
+   * @listener get_chat_message_list_failed
+   * @param chatRoomId 채팅방 ID
+   * @returns chatMessageList: ChatMessage[]
+   */
+  @SubscribeMessage(EventMessage.GET_CHAT_MESSAGE_LIST)
+  @UseInterceptors(WebSocketUserValidationInterceptor)
+  @ValidateDto(GetMessageRequestDto)
+  async getChatMessageList(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() body: GetMessageRequestDto,
+  ) {
+    try {
+      const userId = socket.data.userId;
+      const chatMessageList = await this.chatService.getChatMessageList(
+        userId,
+        body.chatRoomId,
+      );
+      this.socketEmitService.getChatMessageListSuccess(socket, chatMessageList);
+      this.logUtil.WebSocketSuccess(
+        `[${socket.id}][${userId}][${body.chatRoomId}] ${chatMessageList.length} messages`,
+      );
+    } catch (error) {
+      let errorCode = EventErrorCode.INTERNAL_ERROR;
+      switch (error.constructor) {
+        case ChatRoomMemberNotFoundException:
+          errorCode = EventErrorCode.CHAT_ROOM_MEMBER_NOT_FOUND;
+          break;
+      }
+      this.logUtil.WebSocketError(
+        `[${socket.id}][${socket.data?.userId || 'unknown'}][${error.message}]`,
+      );
+      this.socketEmitService.getChatMessageListFailed(socket, errorCode, error);
     }
   }
 

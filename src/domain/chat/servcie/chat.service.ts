@@ -33,6 +33,7 @@ import { ChatRoomNotAliveException } from 'src/config/exception/chat-room-not-al
 import { GetChatRoomsSuccessResponseDto } from '../dto/response/get-chat-rooms-success.response';
 import { Advertisers } from 'src/domain/user/entity/Advertisers.entity';
 import { Author } from 'src/domain/user/entity/Author.entity';
+import { GetMessageSuccessResponseDto } from '../dto/response/get-message-success.response';
 
 @Injectable()
 export class ChatService {
@@ -262,6 +263,56 @@ export class ChatService {
     }
 
     return response;
+  }
+
+  /**
+   * 채팅방 메시지 목록 조회
+   * @param memberId 사용자 ID
+   * @param chatRoomId 채팅방 ID
+   * @returns 채팅방 메시지 목록
+   */
+  async getChatMessageList(memberId: string, chatRoomId: string) {
+    try {
+      const chatRoomMember =
+        await this.chatRoomMemberRepository.getChatRoomMember({
+          chatRoomId,
+          memberId,
+        });
+      if (!chatRoomMember) {
+        throw new ChatRoomMemberNotFoundException(chatRoomId, memberId);
+      }
+
+      const chatMessageList =
+        await this.chatMessageRepository.getChatMessageList({
+          chatRoomId,
+        });
+
+      const response: GetMessageSuccessResponseDto[] = chatMessageList.map(
+        (chatMessage) => {
+          const dto = new GetMessageSuccessResponseDto();
+          dto.id = chatMessage.id;
+          dto.chatRoom = { id: chatMessage.chatRoom.id };
+          dto.type = chatMessage.type;
+          dto.message = chatMessage.message ?? '';
+          dto.systemMessage = chatMessage.systemMessage
+            ? JSON.stringify(chatMessage.systemMessage)
+            : null;
+          dto.senderType = chatMessage.senderType;
+          dto.senderId = chatMessage.senderId;
+          dto.createdAt = chatMessage.createdAt;
+          dto.updatedAt = chatMessage.updatedAt;
+          dto.files = chatMessage.files;
+          return dto;
+        },
+      );
+
+      return response;
+    } catch (error) {
+      this.logUtil.error(
+        `[ChatService][getChatMessageList] getChatMessageList failed: ${error}`,
+      );
+      throw error;
+    }
   }
 
   /**

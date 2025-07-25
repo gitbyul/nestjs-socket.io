@@ -20,6 +20,9 @@ import { UnreadCountUpdatedResponseDto } from '../dto/response/unread-count-upda
 import { UnreadCountSummaryResponseDto } from '../dto/response/unread-count-summary.response';
 import { ReadMessageFailedResponseDto } from '../dto/response/read-message-failed.response';
 import { UnreadCountSummaryFailedResponseDto } from '../dto/response/unread-count-summary-failed.response';
+import { GetMessageSuccessResponseDto } from '../dto/response/get-message-success.response';
+import { GetMessageRequestDto } from '../dto/request/get-message.request';
+import { GetMessageFailedResponseDto } from '../dto/response/get-message-failed.response';
 
 export type EventPayloadMap = {
   // 연결 관련
@@ -42,6 +45,9 @@ export type EventPayloadMap = {
   [EventMessage.NEW_MESSAGE]: NewMessageResponseDto;
   [EventMessage.SEND_MESSAGE_SUCCESS]: SendMessageSuccessResponseDto;
   [EventMessage.SEND_MESSAGE_FAILED]: SendMessageFailedResponseDto;
+  [EventMessage.GET_CHAT_MESSAGE_LIST]: GetMessageRequestDto;
+  [EventMessage.GET_CHAT_MESSAGE_LIST_SUCCESS]: GetMessageSuccessResponseDto[];
+  [EventMessage.GET_CHAT_MESSAGE_LIST_FAILED]: GetMessageFailedResponseDto;
   [EventMessage.READ_MESSAGE]: ReadMessageRequestDto;
   [EventMessage.READ_MESSAGE_SUCCESS]: ReadMessageSuccessResponseDto;
   [EventMessage.READ_MESSAGE_FAILED]: ReadMessageFailedResponseDto;

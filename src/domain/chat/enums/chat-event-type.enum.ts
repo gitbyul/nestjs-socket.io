@@ -34,4 +34,7 @@ export enum EventMessage {
   UNREAD_COUNT_SUMMARY = 'unread_count_summary', // 읽지 않은 메시지 수 요약 조회 [ 클라이언트 -> 서버 ]
   UNREAD_COUNT_SUMMARY_SUCCESS = 'unread_count_summary_success', // 읽지 않은 메시지 수 요약 [ 서버 -> 클라이언트 ]
   UNREAD_COUNT_SUMMARY_FAILED = 'unread_count_summary_failed', // 읽지 않은 메시지 수 요약 조회 실패 [ 서버 -> 클라이언트 ]
+  GET_CHAT_MESSAGE_LIST = 'get_chat_message_list', // 채팅방 메시지 목록 조회 [ 클라이언트 -> 서버 ]
+  GET_CHAT_MESSAGE_LIST_SUCCESS = 'get_chat_message_list_success', // 채팅방 메시지 목록 조회 성공 [ 서버 -> 클라이언트 ]
+  GET_CHAT_MESSAGE_LIST_FAILED = 'get_chat_message_list_failed', // 채팅방 메시지 목록 조회 실패 [ 서버 -> 클라이언트 ]
 }
