@@ -40,7 +40,7 @@ export class AuthService {
    * @returns UserPayload
    */
   async authenticateSocket(socket: Socket) {
-    const token = this.extractWebSocketJwtToken(socket);
+    const token = this.extractWebSocketJwtTokenWithQuery(socket);
     const payload = await this.verifyToken(token);
     if (!this.isAccessToken(payload)) {
       throw new UnauthorizedException('Invalid token');
@@ -66,16 +66,34 @@ export class AuthService {
   }
 
   /**
-   * 웹소켓 연결 시 토큰 추출
+   * 웹소켓 연결 시 토큰 추출 (header)
    * @param socket
    * @returns string
+   * @deprecated header 토큰 추출 로직 사용 안함
    */
-  private extractWebSocketJwtToken(socket: Socket) {
+  private extractWebSocketJwtTokenWithHeader(socket: Socket) {
     const authHeader = socket.handshake.headers.authorization;
     if (!authHeader)
       throw new UnauthorizedException('No authorization header found');
 
     const [bearer, token] = authHeader.split(' ');
+    if (bearer !== 'Bearer' || !token)
+      throw new UnauthorizedException('Invalid or missing token');
+
+    return token;
+  }
+
+  /**
+   * 웹소켓 연결 시 토큰 추출 (query)
+   * @param socket
+   * @returns string
+   */
+  private extractWebSocketJwtTokenWithQuery(socket: Socket) {
+    const tokenQuery = socket.handshake.query.token as string;
+    if (!tokenQuery)
+      throw new UnauthorizedException('Invalid or missing token');
+
+    const [bearer, token] = tokenQuery.split(' ');
     if (bearer !== 'Bearer' || !token)
       throw new UnauthorizedException('Invalid or missing token');
 
