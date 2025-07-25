@@ -226,11 +226,20 @@ export class ChatService {
 
     const chatRoomList =
       await this.chatRoomRepository.getChatRoomListWithMember(userId);
+
     for (const chatRoom of chatRoomList) {
+      const dto = new GetChatRoomsSuccessResponseDto();
+      dto.roomId = chatRoom.id;
+      dto.alive = chatRoom.alive;
+      dto.lastMessage = chatRoom.lastMessage;
+      dto.createdAt = chatRoom.createdAt;
+      dto.updatedAt = chatRoom.updatedAt;
+
       const lastMessageByRole = chatRoom.lastMessageByRole;
       const lastMessageById = chatRoom.lastMessageById;
 
       if (!lastMessageById || !lastMessageByRole) {
+        response.push(dto);
         continue;
       }
 
@@ -251,14 +260,10 @@ export class ChatService {
             ? (lastMessageByUser as Author).profileImage
             : null,
       };
-      const dto = new GetChatRoomsSuccessResponseDto();
-      dto.roomId = chatRoom.id;
-      dto.alive = chatRoom.alive;
-      dto.lastMessage = chatRoom.lastMessage;
+
       dto.lastMessageAt = chatRoom.lastMessageAt;
       dto.lastMessageUserInfo = lastMessageByUserInfo;
-      dto.createdAt = chatRoom.createdAt;
-      dto.updatedAt = chatRoom.updatedAt;
+
       response.push(dto);
     }
 
