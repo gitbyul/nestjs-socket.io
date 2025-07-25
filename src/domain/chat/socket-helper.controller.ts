@@ -17,6 +17,8 @@ import { ReadMessageRequestDto } from './dto/request/read-message.request';
 import { ReadMessageSuccessResponseDto } from './dto/response/read-message-success.response';
 import { ReadMessageFailedResponseDto } from './dto/response/read-message-failed.response';
 import { UnreadCountSummaryFailedResponseDto } from './dto/response/unread-count-summary-failed.response';
+import { GetMessageSuccessResponseDto } from './dto/response/get-message-success.response';
+import { GetMessageFailedResponseDto } from './dto/response/get-message-failed.response';
 
 @Controller('socket-helper')
 @ApiTags('SocketHelper')
@@ -142,7 +144,7 @@ export class SocketHelperController {
   @ApiResponse({
     status: 200,
     description: 'get_chat_rooms_success (채팅방 목록 조회 성공) 이벤트 발송',
-    type: Array<GetChatRoomsSuccessResponseDto>,
+    type: GetChatRoomsSuccessResponseDto,
   })
   @ApiResponse({
     status: 400,
@@ -152,6 +154,31 @@ export class SocketHelperController {
   getChatRooms() {
     return ResponseEntity.success({
       message: 'Get chat rooms',
+    });
+  }
+
+  @Get('/get_chat_message_list')
+  @ApiOperation({
+    summary: '채팅방 메시지 목록 조회',
+    description: `
+    Websocket 서버 채팅방 메시지 목록 조회 이벤트
+    `,
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'get_chat_message_list_success (채팅방 메시지 목록 조회 성공) 이벤트 발송',
+    type: GetMessageSuccessResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'get_chat_message_list_failed (채팅방 메시지 목록 조회 실패) 이벤트 발송',
+    type: GetMessageFailedResponseDto,
+  })
+  getChatMessageList() {
+    return ResponseEntity.success({
+      message: 'Get chat message list',
     });
   }
 
