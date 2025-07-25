@@ -40,7 +40,8 @@ export class AuthService {
    * @returns UserPayload
    */
   async authenticateSocket(socket: Socket) {
-    const token = this.extractWebSocketJwtTokenWithQuery(socket);
+    const token = this.extractWebSocketJwtToken(socket);
+
     const payload = await this.verifyToken(token);
     if (!this.isAccessToken(payload)) {
       throw new UnauthorizedException('Invalid token');
@@ -66,17 +67,21 @@ export class AuthService {
   }
 
   /**
-   * 웹소켓 연결 시 토큰 추출 (header)
+   * 웹소켓 연결 시 토큰 추출
    * @param socket
-   * @returns string
-   * @deprecated header 토큰 추출 로직 사용 안함
+   * @returns <token>
    */
-  private extractWebSocketJwtTokenWithHeader(socket: Socket) {
-    const authHeader = socket.handshake.headers.authorization;
-    if (!authHeader)
-      throw new UnauthorizedException('No authorization header found');
+  private extractWebSocketJwtToken(socket: Socket) {
+    const authToken = this.extractWebSocketJwtTokenWithAuth(socket);
+    const headerToken = this.extractWebSocketJwtTokenWithHeader(socket);
+    const queryToken = this.extractWebSocketJwtTokenWithQuery(socket);
 
-    const [bearer, token] = authHeader.split(' ');
+    if (!authToken && !headerToken && !queryToken)
+      throw new UnauthorizedException('Not found token');
+
+    const jwt = authToken || headerToken || queryToken;
+
+    const [bearer, token] = jwt.split(' ');
     if (bearer !== 'Bearer' || !token)
       throw new UnauthorizedException('Invalid or missing token');
 
@@ -84,20 +89,30 @@ export class AuthService {
   }
 
   /**
+   * 웹소켓 연결 시 토큰 추출 (auth)
+   * @param socket
+   * @returns Bearer <token>
+   */
+  private extractWebSocketJwtTokenWithAuth(socket: Socket) {
+    return socket.handshake.auth.token as string;
+  }
+
+  /**
+   * 웹소켓 연결 시 토큰 추출 (header)
+   * @param socket
+   * @returns Bearer <token>
+   */
+  private extractWebSocketJwtTokenWithHeader(socket: Socket) {
+    return socket.handshake.headers.authorization;
+  }
+
+  /**
    * 웹소켓 연결 시 토큰 추출 (query)
    * @param socket
-   * @returns string
+   * @returns Bearer <token>
    */
   private extractWebSocketJwtTokenWithQuery(socket: Socket) {
-    const tokenQuery = socket.handshake.query.token as string;
-    if (!tokenQuery)
-      throw new UnauthorizedException('Invalid or missing token');
-
-    const [bearer, token] = tokenQuery.split(' ');
-    if (bearer !== 'Bearer' || !token)
-      throw new UnauthorizedException('Invalid or missing token');
-
-    return token;
+    return socket.handshake.query.token as string;
   }
 
   /**
