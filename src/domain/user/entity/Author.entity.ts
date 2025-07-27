@@ -99,8 +99,20 @@ export class Author {
     comment: '서비스 썸네일 URL',
   })
   serviceThumbnailUrl: string;
-  @Column({ name: 'service_price', type: 'int', comment: '서비스 단가' })
-  servicePrice: number;
+  @Column({
+    name: 'service_price_min',
+    type: 'int',
+    nullable: true,
+    comment: '서비스 단가 최소',
+  })
+  servicePriceMin: number | null;
+  @Column({
+    name: 'service_price_max',
+    type: 'int',
+    nullable: true,
+    comment: '서비스 단가 최대',
+  })
+  servicePriceMax: number | null;
   @Column({ name: 'service_text', type: 'text', comment: '서비스 소개' })
   serviceText: string;
   @Column({
