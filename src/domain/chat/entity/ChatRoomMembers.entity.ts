@@ -20,6 +20,8 @@ import { UserRole } from 'src/domain/auth/enums/user-role.enum';
 
 import { ValidationEntity } from 'src/config/entity/Validation.entity';
 import { ChatRooms } from './ChatRooms.entity';
+import { Advertisers } from 'src/domain/user/entity/Advertisers.entity';
+import { Author } from 'src/domain/user/entity/Author.entity';
 
 @Entity({ name: 'chat_room_members' })
 export class ChatRoomMembers extends ValidationEntity {
@@ -115,4 +117,13 @@ export class ChatRoomMembers extends ValidationEntity {
     comment: '채팅 참여자 탈퇴 시간',
   })
   leftAt: Date | null;
+
+  // relations
+  @ManyToOne(() => Author, { nullable: true })
+  @JoinColumn([{ name: 'member_id', referencedColumnName: 'id' }])
+  authorMember: Author | null;
+
+  @ManyToOne(() => Advertisers, { nullable: true })
+  @JoinColumn([{ name: 'member_id', referencedColumnName: 'id' }])
+  advertiserMember: Advertisers | null;
 }

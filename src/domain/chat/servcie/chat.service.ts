@@ -234,6 +234,21 @@ export class ChatService {
       dto.lastMessage = chatRoom.lastMessage;
       dto.createdAt = chatRoom.createdAt;
       dto.updatedAt = chatRoom.updatedAt;
+      dto.memberCount = chatRoom.chatRoomMembers.length;
+      dto.memberList = chatRoom.chatRoomMembers.map((member) => {
+        return {
+          id: member.memberId,
+          role: member.memberType,
+          name:
+            member.memberType === UserRole.AUTHOR
+              ? (member.authorMember as Author).nickName
+              : (member.advertiserMember as Advertisers).contactName,
+          profileImage:
+            member.memberType === UserRole.AUTHOR
+              ? (member.authorMember as Author).profileImage
+              : (member.advertiserMember as Advertisers).profileImgUrl,
+        };
+      });
 
       const lastMessageByRole = chatRoom.lastMessageByRole;
       const lastMessageById = chatRoom.lastMessageById;

@@ -43,6 +43,30 @@ export class GetChatRoomsSuccessResponseDto {
   } | null;
 
   @ApiProperty({
+    description: '채팅방 멤버 수',
+    example: 2,
+  })
+  memberCount: number;
+
+  @ApiProperty({
+    description: '채팅방 멤버 목록',
+    example: [
+      {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        role: UserRole.ADVERTISER,
+        name: 'John Doe',
+        profileImage: 'https://example.com/profile.jpg',
+      },
+    ],
+  })
+  memberList: {
+    id: string;
+    role: UserRole;
+    name: string;
+    profileImage?: string | null;
+  }[];
+
+  @ApiProperty({
     description: '생성일',
     example: new Date(),
   })

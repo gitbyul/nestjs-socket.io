@@ -81,6 +81,15 @@ export class Advertisers {
   bizImgUrl: string;
 
   @Column({
+    name: 'profile_img_url',
+    type: 'varchar',
+    nullable: true,
+    length: 500,
+    comment: '프로필 이미지 URL',
+  })
+  profileImgUrl: string;
+
+  @Column({
     name: 'status',
     type: 'enum',
     nullable: false,

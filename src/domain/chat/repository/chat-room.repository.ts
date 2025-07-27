@@ -23,6 +23,8 @@ export class ChatRoomRepository {
     const chatRooms = await this.chatRoomsRepository
       .createQueryBuilder('chatRoom')
       .leftJoinAndSelect('chatRoom.chatRoomMembers', 'chatRoomMember')
+      .leftJoinAndSelect('chatRoomMember.authorMember', 'authorMember')
+      .leftJoinAndSelect('chatRoomMember.advertiserMember', 'advertiserMember')
       .where((qb) => {
         const subQuery = qb
           .subQuery()

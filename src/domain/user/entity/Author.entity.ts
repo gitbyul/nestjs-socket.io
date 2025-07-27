@@ -116,9 +116,10 @@ export class Author {
   @Column({ name: 'service_text', type: 'text', comment: '서비스 소개' })
   serviceText: string;
   @Column({
-    name: 'service_extra_text',
-    type: 'text',
-    comment: '부가 서비스 소개',
+    name: 'service_extra',
+    type: 'json',
+    nullable: true,
+    comment: '부가 서비스',
   })
-  serviceExtraText: string;
+  serviceExtra: { title: string; description: string; price: number }[] | null;
 }
